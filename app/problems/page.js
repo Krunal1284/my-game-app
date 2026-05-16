@@ -1,0 +1,501 @@
+"use client";
+
+import { useState, useEffect } from "react";
+
+const PROBLEMS = [
+  { id: 1,   title: "Two Sum",                    tag: ["Array","Hash Map"],         diff: "EASY",   xp: 120,  solved: true,  attempts: 4821, acceptance: 82 },
+  { id: 2,   title: "Valid Parentheses",           tag: ["Stack","String"],           diff: "EASY",   xp: 120,  solved: true,  attempts: 3201, acceptance: 76 },
+  { id: 3,   title: "Best Time to Buy Stock",      tag: ["Array","Greedy"],           diff: "EASY",   xp: 150,  solved: true,  attempts: 2908, acceptance: 71 },
+  { id: 4,   title: "Longest Substring",           tag: ["Sliding Window","String"],  diff: "MEDIUM", xp: 280,  solved: false, attempts: 1842, acceptance: 54 },
+  { id: 5,   title: "Merge Intervals",             tag: ["Sorting","Array"],          diff: "MEDIUM", xp: 280,  solved: false, attempts: 1620, acceptance: 49 },
+  { id: 6,   title: "3Sum",                        tag: ["Array","Two Pointer"],      diff: "MEDIUM", xp: 300,  solved: false, attempts: 1380, acceptance: 43 },
+  { id: 7,   title: "Word Search",                 tag: ["Backtracking","Matrix"],    diff: "MEDIUM", xp: 320,  solved: false, attempts: 1120, acceptance: 41 },
+  { id: 8,   title: "Coin Change",                 tag: ["DP","BFS"],                 diff: "MEDIUM", xp: 350,  solved: false, attempts: 980,  acceptance: 38 },
+  { id: 9,   title: "Binary Tree Max Path",        tag: ["Tree","DFS"],               diff: "HARD",   xp: 500,  solved: false, attempts: 620,  acceptance: 28 },
+  { id: 10,  title: "Trapping Rain Water",         tag: ["DP","Two Pointer"],         diff: "HARD",   xp: 500,  solved: false, attempts: 540,  acceptance: 25 },
+  { id: 11,  title: "Serialize Binary Tree",       tag: ["Tree","BFS"],               diff: "HARD",   xp: 550,  solved: false, attempts: 410,  acceptance: 22 },
+  { id: 12,  title: "Median of Two Arrays",        tag: ["Binary Search","Array"],    diff: "HARD",   xp: 600,  solved: false, attempts: 380,  acceptance: 18 },
+];
+
+const TAGS = ["All", "Array", "String", "Tree", "DP", "Graph", "Sliding Window", "Two Pointer", "Stack", "Backtracking", "Binary Search", "Greedy"];
+
+export default function ProblemsPage() {
+  const [search, setSearch]   = useState("");
+  const [diff, setDiff]       = useState("ALL");
+  const [tag, setTag]         = useState("All");
+  const [status, setStatus]   = useState("ALL");
+  const [hovered, setHovered] = useState(null);
+  const [loaded, setLoaded]   = useState(false);
+
+  useEffect(() => { setTimeout(() => setLoaded(true), 100); }, []);
+
+  const filtered = PROBLEMS.filter((p) => {
+    const matchSearch = p.title.toLowerCase().includes(search.toLowerCase());
+    const matchDiff   = diff === "ALL" || p.diff === diff;
+    const matchTag    = tag === "All"  || p.tag.includes(tag);
+    const matchStatus = status === "ALL" || (status === "SOLVED" ? p.solved : !p.solved);
+    return matchSearch && matchDiff && matchTag && matchStatus;
+  });
+
+  const diffColor = (d) => d === "EASY" ? "#22c55e" : d === "MEDIUM" ? "#f59e0b" : "#ef4444";
+  const diffBg    = (d) => d === "EASY" ? "rgba(34,197,94,0.08)" : d === "MEDIUM" ? "rgba(245,158,11,0.08)" : "rgba(239,68,68,0.08)";
+
+  const totalSolved = PROBLEMS.filter(p => p.solved).length;
+  const easySolved  = PROBLEMS.filter(p => p.solved && p.diff === "EASY").length;
+  const medSolved   = PROBLEMS.filter(p => p.solved && p.diff === "MEDIUM").length;
+  const hardSolved  = PROBLEMS.filter(p => p.solved && p.diff === "HARD").length;
+
+  return (
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Share+Tech+Mono&family=Exo+2:wght@300;400;500;600&display=swap');
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #080810; }
+        ::-webkit-scrollbar-thumb { background: rgba(250,204,21,0.3); border-radius: 2px; }
+
+        body { background: #080810; font-family: 'Exo 2', sans-serif; color: #e2e8f0; }
+
+        .page {
+          min-height: 100vh;
+          background:
+            radial-gradient(ellipse at 10% 20%, rgba(250,204,21,0.05) 0%, transparent 50%),
+            radial-gradient(ellipse at 90% 80%, rgba(234,88,12,0.04) 0%, transparent 50%),
+            #080810;
+        }
+
+        /* TOPBAR */
+        .topbar {
+          display: flex; align-items: center; justify-content: space-between;
+          padding: 0 40px; height: 60px;
+          background: rgba(8,8,16,0.95);
+          border-bottom: 1px solid rgba(250,204,21,0.12);
+          backdrop-filter: blur(20px);
+          position: sticky; top: 0; z-index: 100;
+        }
+        .logo {
+          display: flex; align-items: center; gap: 10px;
+          font-family: 'Orbitron', monospace; font-size: 18px;
+          font-weight: 900; color: #facc15; letter-spacing: 3px;
+          cursor: pointer;
+        }
+        .logo-hex {
+          width: 32px; height: 32px;
+          background: rgba(250,204,21,0.15); border: 1px solid #facc15;
+          clip-path: polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+          display: flex; align-items: center; justify-content: center; font-size: 12px;
+        }
+        .nav-links { display: flex; align-items: center; gap: 4px; }
+        .nav-link {
+          padding: 6px 16px; font-family: 'Share Tech Mono', monospace;
+          font-size: 11px; letter-spacing: 2px; color: rgba(255,255,255,0.35);
+          cursor: pointer; border: none; background: none; transition: color 0.2s;
+          text-transform: uppercase;
+        }
+        .nav-link:hover { color: rgba(250,204,21,0.7); }
+        .nav-link.active { color: #facc15; }
+        .avatar {
+          width: 34px; height: 34px;
+          background: linear-gradient(135deg, #facc15, #f59e0b);
+          clip-path: polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+          display: flex; align-items: center; justify-content: center;
+          font-size: 12px; font-weight: 700; color: #080810; cursor: pointer;
+          font-family: 'Orbitron', monospace;
+        }
+
+        /* MAIN */
+        .main { max-width: 1200px; margin: 0 auto; padding: 32px 40px; }
+
+        /* PAGE HEADER */
+        .page-header {
+          margin-bottom: 28px;
+          opacity: ${loaded ? 1 : 0};
+          transform: translateY(${loaded ? 0 : 16}px);
+          transition: all 0.5s ease;
+        }
+        .page-tag {
+          font-family: 'Share Tech Mono', monospace; font-size: 10px;
+          letter-spacing: 4px; color: rgba(250,204,21,0.4); margin-bottom: 8px;
+        }
+        .page-title {
+          font-family: 'Orbitron', monospace; font-size: 30px;
+          font-weight: 900; color: #fff; margin-bottom: 6px;
+        }
+        .page-title span { color: #facc15; }
+        .page-sub { font-size: 13px; color: rgba(255,255,255,0.35); letter-spacing: 0.5px; }
+
+        /* STATS ROW */
+        .stats-row {
+          display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
+          margin-bottom: 24px;
+          opacity: ${loaded ? 1 : 0};
+          transform: translateY(${loaded ? 0 : 12}px);
+          transition: all 0.5s 0.1s ease;
+        }
+        .stat-box {
+          padding: 16px 20px;
+          background: rgba(8,8,16,0.9);
+          border: 1px solid rgba(250,204,21,0.1);
+          clip-path: polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%);
+          transition: border-color 0.2s, transform 0.2s;
+          position: relative; overflow: hidden;
+        }
+        .stat-box:hover { border-color: rgba(250,204,21,0.25); transform: translateY(-2px); }
+        .stat-box::after {
+          content: ''; position: absolute; top: 0; right: 0;
+          width: 10px; height: 10px;
+          border-top: 1px solid rgba(250,204,21,0.3);
+          border-right: 1px solid rgba(250,204,21,0.3);
+        }
+        .stat-box-val {
+          font-family: 'Orbitron', monospace; font-size: 24px;
+          font-weight: 700; line-height: 1; margin-bottom: 4px;
+        }
+        .stat-box-lbl { font-size: 10px; letter-spacing: 2px; color: rgba(255,255,255,0.3); font-family: 'Share Tech Mono', monospace; }
+        .stat-box-bar { height: 3px; margin-top: 10px; background: rgba(255,255,255,0.05); overflow: hidden; }
+        .stat-box-fill { height: 100%; transition: width 1.2s cubic-bezier(0.4,0,0.2,1); }
+
+        /* FILTERS */
+        .filters {
+          display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+          margin-bottom: 16px;
+          opacity: ${loaded ? 1 : 0};
+          transition: all 0.5s 0.15s ease;
+        }
+        .search-wrap {
+          position: relative; flex: 1; min-width: 200px;
+        }
+        .search-icon {
+          position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+          color: rgba(250,204,21,0.3); font-family: 'Share Tech Mono', monospace; font-size: 13px;
+          pointer-events: none;
+        }
+        .search-input {
+          width: 100%; background: rgba(250,204,21,0.03);
+          border: 1px solid rgba(250,204,21,0.15);
+          color: #f5f5f5; font-family: 'Share Tech Mono', monospace;
+          font-size: 13px; padding: 11px 14px 11px 40px; outline: none;
+          clip-path: polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%);
+          transition: border-color 0.2s, background 0.2s;
+          letter-spacing: 1px;
+        }
+        .search-input::placeholder { color: rgba(255,255,255,0.15); }
+        .search-input:focus { border-color: rgba(250,204,21,0.4); background: rgba(250,204,21,0.05); }
+
+        .filter-group { display: flex; gap: 6px; }
+        .filter-btn {
+          padding: 9px 16px; background: rgba(250,204,21,0.04);
+          border: 1px solid rgba(250,204,21,0.12);
+          color: rgba(255,255,255,0.4); font-family: 'Share Tech Mono', monospace;
+          font-size: 10px; letter-spacing: 2px; cursor: pointer;
+          transition: all 0.2s; text-transform: uppercase;
+          clip-path: polygon(0 0,calc(100% - 6px) 0,100% 6px,100% 100%,6px 100%,0 calc(100% - 6px));
+        }
+        .filter-btn:hover { color: rgba(250,204,21,0.8); border-color: rgba(250,204,21,0.3); }
+        .filter-btn.active { background: rgba(250,204,21,0.12); border-color: rgba(250,204,21,0.4); color: #facc15; }
+        .filter-btn.easy.active   { background: rgba(34,197,94,0.1);  border-color: rgba(34,197,94,0.4);  color: #22c55e; }
+        .filter-btn.medium.active { background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.4); color: #f59e0b; }
+        .filter-btn.hard.active   { background: rgba(239,68,68,0.1);  border-color: rgba(239,68,68,0.4);  color: #ef4444; }
+
+        /* TAG SCROLL */
+        .tags-scroll {
+          display: flex; gap: 8px; margin-bottom: 20px;
+          overflow-x: auto; padding-bottom: 4px;
+          opacity: ${loaded ? 1 : 0}; transition: all 0.5s 0.2s ease;
+        }
+        .tags-scroll::-webkit-scrollbar { height: 2px; }
+        .tags-scroll::-webkit-scrollbar-thumb { background: rgba(250,204,21,0.2); }
+        .tag-chip {
+          padding: 5px 12px; white-space: nowrap;
+          background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+          color: rgba(255,255,255,0.35); font-family: 'Share Tech Mono', monospace;
+          font-size: 9px; letter-spacing: 2px; cursor: pointer;
+          transition: all 0.2s; flex-shrink: 0;
+        }
+        .tag-chip:hover { color: rgba(250,204,21,0.7); border-color: rgba(250,204,21,0.25); }
+        .tag-chip.active { background: rgba(250,204,21,0.08); border-color: rgba(250,204,21,0.35); color: #facc15; }
+
+        /* TABLE */
+        .table-wrap {
+          background: rgba(8,8,16,0.85); border: 1px solid rgba(250,204,21,0.1);
+          backdrop-filter: blur(10px);
+          opacity: ${loaded ? 1 : 0};
+          transform: translateY(${loaded ? 0 : 8}px);
+          transition: all 0.5s 0.25s ease;
+        }
+        .table-header {
+          display: grid;
+          grid-template-columns: 48px 40px 1fr 160px 100px 80px 80px;
+          gap: 0; padding: 12px 20px;
+          border-bottom: 1px solid rgba(250,204,21,0.1);
+        }
+        .th {
+          font-family: 'Share Tech Mono', monospace; font-size: 9px;
+          letter-spacing: 2px; color: rgba(250,204,21,0.35); text-transform: uppercase;
+          display: flex; align-items: center;
+        }
+
+        .problem-row {
+          display: grid;
+          grid-template-columns: 48px 40px 1fr 160px 100px 80px 80px;
+          gap: 0; padding: 14px 20px;
+          border-bottom: 1px solid rgba(250,204,21,0.05);
+          cursor: pointer; transition: background 0.15s;
+          position: relative;
+          animation: rowIn 0.3s ease both;
+        }
+        .problem-row:last-child { border-bottom: none; }
+        .problem-row:hover { background: rgba(250,204,21,0.03); }
+        .problem-row:hover .row-arrow { opacity: 1; transform: translateX(0); }
+        .problem-row.solved { }
+
+        @keyframes rowIn {
+          from { opacity: 0; transform: translateX(-8px); }
+          to   { opacity: 1; transform: translateX(0); }
+        }
+
+        .row-status {
+          display: flex; align-items: center;
+        }
+        .status-icon {
+          width: 18px; height: 18px;
+          border: 1px solid rgba(250,204,21,0.2);
+          display: flex; align-items: center; justify-content: center;
+          font-size: 9px;
+          clip-path: polygon(3px 0,100% 0,100% calc(100% - 3px),calc(100% - 3px) 100%,0 100%,0 3px);
+        }
+        .status-icon.done {
+          background: rgba(34,197,94,0.15); border-color: rgba(34,197,94,0.4); color: #22c55e;
+        }
+
+        .row-num {
+          display: flex; align-items: center;
+          font-family: 'Share Tech Mono', monospace; font-size: 11px;
+          color: rgba(255,255,255,0.2);
+        }
+
+        .row-title-wrap { display: flex; flex-direction: column; justify-content: center; gap: 4px; }
+        .row-title {
+          font-size: 14px; font-weight: 500; color: #e2e8f0;
+          transition: color 0.2s;
+        }
+        .problem-row:hover .row-title { color: #facc15; }
+        .row-tags { display: flex; gap: 6px; }
+        .row-tag {
+          font-family: 'Share Tech Mono', monospace; font-size: 8px;
+          letter-spacing: 1px; color: rgba(255,255,255,0.25);
+          background: rgba(255,255,255,0.04); padding: 2px 7px;
+        }
+
+        .row-diff {
+          display: flex; align-items: center;
+        }
+        .diff-badge {
+          font-family: 'Share Tech Mono', monospace; font-size: 9px;
+          letter-spacing: 1px; padding: 4px 10px; border: 1px solid;
+          clip-path: polygon(0 0,calc(100% - 5px) 0,100% 5px,100% 100%,5px 100%,0 calc(100% - 5px));
+        }
+
+        .row-acceptance { display: flex; align-items: center; flex-direction: column; gap: 4px; justify-content: center; }
+        .acceptance-val { font-family: 'Share Tech Mono', monospace; font-size: 12px; color: rgba(255,255,255,0.5); }
+        .acceptance-bar { width: 60px; height: 2px; background: rgba(255,255,255,0.05); }
+        .acceptance-fill { height: 100%; background: rgba(250,204,21,0.3); }
+
+        .row-xp { display: flex; align-items: center; }
+        .xp-val { font-family: 'Orbitron', monospace; font-size: 12px; font-weight: 600; color: #facc15; }
+
+        .row-action { display: flex; align-items: center; justify-content: flex-end; }
+        .row-arrow {
+          font-family: 'Share Tech Mono', monospace; font-size: 11px;
+          color: rgba(250,204,21,0.5); opacity: 0;
+          transform: translateX(-6px); transition: all 0.2s;
+        }
+
+        /* EMPTY STATE */
+        .empty {
+          padding: 60px; text-align: center;
+          font-family: 'Share Tech Mono', monospace;
+          color: rgba(250,204,21,0.2); letter-spacing: 3px; font-size: 12px;
+        }
+
+        /* RESULT COUNT */
+        .result-count {
+          display: flex; align-items: center; justify-content: space-between;
+          margin-bottom: 12px;
+        }
+        .count-text {
+          font-family: 'Share Tech Mono', monospace; font-size: 10px;
+          color: rgba(255,255,255,0.25); letter-spacing: 2px;
+        }
+        .count-text span { color: #facc15; }
+        .sort-btn {
+          font-family: 'Share Tech Mono', monospace; font-size: 10px;
+          color: rgba(250,204,21,0.3); background: none; border: none;
+          cursor: pointer; letter-spacing: 2px; transition: color 0.2s;
+        }
+        .sort-btn:hover { color: #facc15; }
+      `}</style>
+
+      <div className="page">
+        {/* TOPBAR */}
+        <header className="topbar">
+          <div className="logo" onClick={() => window.location.href = "/dashboard"}>
+            <div className="logo-hex">⬡</div>
+            CODEARENA
+          </div>
+          <nav className="nav-links">
+            {["Dashboard","Problems","Arena","Leaderboard","Profile"].map((n) => (
+              <button key={n} className={`nav-link ${n === "Problems" ? "active" : ""}`}
+                onClick={() => {
+            if (n === "Dashboard") window.location.href = "/dashboard";
+            if (n === "Problems") window.location.href = "/problems";
+            if (n === "Leaderboard") window.location.href = "/leaderboard";
+            if (n === "Profile") window.location.href = "/profile";
+            }}>
+            {n}
+              </button>
+            ))}
+          </nav>
+          <div className="avatar">KG</div>
+        </header>
+
+        <main className="main">
+          {/* Page header */}
+          <div className="page-header">
+            <div className="page-tag">// QUEST BOARD</div>
+            <div className="page-title">Choose Your <span>Challenge</span></div>
+            <div className="page-sub">Earn XP, rank up, and dominate the leaderboard</div>
+          </div>
+
+          {/* Stats */}
+          <div className="stats-row">
+            {[
+              { val: `${totalSolved}/${PROBLEMS.length}`, lbl: "Total Solved", fill: (totalSolved/PROBLEMS.length)*100, color: "#facc15" },
+              { val: `${easySolved}/3`,  lbl: "Easy Solved",   fill: (easySolved/3)*100,  color: "#22c55e" },
+              { val: `${medSolved}/5`,   lbl: "Medium Solved", fill: (medSolved/5)*100,   color: "#f59e0b" },
+              { val: `${hardSolved}/4`,  lbl: "Hard Solved",   fill: (hardSolved/4)*100,  color: "#ef4444" },
+            ].map((s) => (
+              <div key={s.lbl} className="stat-box">
+                <div className="stat-box-val" style={{ color: s.color }}>{s.val}</div>
+                <div className="stat-box-lbl">{s.lbl}</div>
+                <div className="stat-box-bar">
+                  <div className="stat-box-fill" style={{ width: `${s.fill}%`, background: s.color }} />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Filters */}
+          <div className="filters">
+            <div className="search-wrap">
+              <span className="search-icon">▸</span>
+              <input
+                className="search-input"
+                placeholder="Search quests..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            <div className="filter-group">
+              {["ALL","EASY","MEDIUM","HARD"].map((d) => (
+                <button key={d}
+                  className={`filter-btn ${d.toLowerCase()} ${diff === d ? "active" : ""}`}
+                  onClick={() => setDiff(d)}>
+                  {d}
+                </button>
+              ))}
+            </div>
+            <div className="filter-group">
+              {["ALL","SOLVED","UNSOLVED"].map((s) => (
+                <button key={s}
+                  className={`filter-btn ${status === s ? "active" : ""}`}
+                  onClick={() => setStatus(s)}>
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Tag chips */}
+          <div className="tags-scroll">
+            {TAGS.map((t) => (
+              <button key={t} className={`tag-chip ${tag === t ? "active" : ""}`} onClick={() => setTag(t)}>
+                {t}
+              </button>
+            ))}
+          </div>
+
+          {/* Result count */}
+          <div className="result-count">
+            <div className="count-text">
+              Showing <span>{filtered.length}</span> of <span>{PROBLEMS.length}</span> quests
+            </div>
+            <button className="sort-btn">SORT BY XP ↓</button>
+          </div>
+
+          {/* Table */}
+          <div className="table-wrap">
+            <div className="table-header">
+              <div className="th">Status</div>
+              <div className="th">#</div>
+              <div className="th">Quest Title</div>
+              <div className="th">Difficulty</div>
+              <div className="th">Acceptance</div>
+              <div className="th">XP</div>
+              <div className="th"></div>
+            </div>
+
+            {filtered.length === 0 ? (
+              <div className="empty">// NO QUESTS FOUND · ADJUST FILTERS</div>
+            ) : (
+              filtered.map((p, i) => (
+                <div
+                  key={p.id}
+                  className={`problem-row ${p.solved ? "solved" : ""}`}
+                  style={{ animationDelay: `${i * 40}ms` }}
+                  onClick={() => window.location.href = `/solve/${p.id}`}
+                >
+                  <div className="row-status">
+                    <div className={`status-icon ${p.solved ? "done" : ""}`}>
+                      {p.solved ? "✓" : ""}
+                    </div>
+                  </div>
+
+                  <div className="row-num">{String(p.id).padStart(2,"0")}</div>
+
+                  <div className="row-title-wrap">
+                    <div className="row-title">{p.title}</div>
+                    <div className="row-tags">
+                      {p.tag.map((t) => <span key={t} className="row-tag">{t}</span>)}
+                    </div>
+                  </div>
+
+                  <div className="row-diff">
+                    <div className="diff-badge" style={{ color: diffColor(p.diff), borderColor: diffColor(p.diff) + "40", background: `rgba(${p.diff==="EASY"?"34,197,94":p.diff==="MEDIUM"?"245,158,11":"239,68,68"},0.06)` }}>
+                      {p.diff}
+                    </div>
+                  </div>
+
+                  <div className="row-acceptance">
+                    <div className="acceptance-val">{p.acceptance}%</div>
+                    <div className="acceptance-bar">
+                      <div className="acceptance-fill" style={{ width: `${p.acceptance}%` }} />
+                    </div>
+                  </div>
+
+                  <div className="row-xp">
+                    <div className="xp-val">+{p.xp}</div>
+                  </div>
+
+                  <div className="row-action">
+                    <div className="row-arrow">SOLVE →</div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </main>
+      </div>
+    </>
+  );
+}
