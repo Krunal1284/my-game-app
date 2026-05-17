@@ -1,5 +1,6 @@
 "use client";
 
+import { supabase } from '@/lib/supabase';
 import { useState, useEffect, useRef } from "react";
 
 export default function LoginPage() {
@@ -69,13 +70,33 @@ export default function LoginPage() {
     };
   }, []);
 
-  const handleSubmit = (e) => {
+  const handleGoogleLogin = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: 'https://my-game-app-beta.vercel.app/dashboard'
+      }
+    });
+    if (error) alert(error.message);
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    window.location.href = "/dashboard";
     setGlitch(true);
     setLoading(true);
     setTimeout(() => setGlitch(false), 600);
-    setTimeout(() => setLoading(false), 2000);
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: form.email,
+      password: form.password,
+    });
+
+    if (error) {
+      alert(error.message);
+      setLoading(false);
+    } else {
+      window.location.href = "/dashboard";
+    }
   };
 
   return (
@@ -527,6 +548,16 @@ export default function LoginPage() {
               </div>
             </button>
           </form>
+
+          <button onClick={handleGoogleLogin} style={{
+            width:'100%', padding:'13px', background:'transparent',
+            border:'1px solid rgba(255,255,255,0.2)', color:'rgba(255,255,255,0.7)',
+            fontFamily:"'Share Tech Mono', monospace", fontSize:'12px',
+            letterSpacing:'2px', cursor:'pointer', marginTop:'16px',
+            display:'flex', alignItems:'center', justifyContent:'center', gap:'10px',
+          }}>
+            <span>G</span> CONTINUE WITH GOOGLE
+          </button>
 
           <div className="bottom-row">
             <button className="link">Forgot Token?</button>
