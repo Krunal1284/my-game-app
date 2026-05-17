@@ -2,6 +2,7 @@
 
 import { supabase } from '@/lib/supabase';
 import { useState, useEffect, useRef } from "react";
+import { updateStreak } from '@/lib/streak';
 
 const QUESTS = [
   { id: 1, title: "Two Sum", tag: "ARRAY", xp: 120, diff: "EASY", done: true },
@@ -41,6 +42,7 @@ export default function Dashboard() {
         window.location.href = '/login';
         return;
       }
+      await updateStreak(user.email);
       const { data } = await supabase
         .from('users')
         .select('*')
