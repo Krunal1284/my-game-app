@@ -26,7 +26,7 @@ export default function SignupPage() {
       setLoading(false);
     } else {
       // Save to users table
-      await supabase.from("users").insert({
+      const { error: insertError } = await supabase.from("users").insert({
         email: form.email,
         username: form.username,
         xp: 0,
@@ -35,6 +35,7 @@ export default function SignupPage() {
         solved: 0,
         rank: "BRONZE"
       });
+      if (insertError) console.error("Insert error:", insertError);
       window.location.href = "/dashboard";
     }
   };
