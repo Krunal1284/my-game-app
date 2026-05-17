@@ -1,7 +1,7 @@
 "use client";
 
 import { supabase } from '@/lib/supabase';
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 const PLAYERS = [
   { rank: 1,  name: "n3ur0_hack",   xp: 142800, solved: 312, streak: 47, badge: "⬡", tier: "LEGEND",   change: 0,  country: "🇯🇵", easy: 98, med: 142, hard: 72 },
@@ -510,7 +510,7 @@ const filtered = players.filter((p) => {
 
           {/* Result count */}
           <div className="result-row">
-            <div className="result-text">Showing <span>{filtered.length}</span> of <span>{PLAYERS.length}</span> players</div>
+            <div className="result-text">Showing <span>{filtered.length}</span> of <span>{players.length}</span> players</div>
             <div className="live-indicator"><div className="live-dot" />LIVE RANKINGS</div>
           </div>
 
