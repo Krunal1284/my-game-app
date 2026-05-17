@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { supabase } from '@/lib/supabase';
+import { useState, useEffect } from "react";
 
 const PLAYERS = [
   { rank: 1,  name: "n3ur0_hack",   xp: 142800, solved: 312, streak: 47, badge: "⬡", tier: "LEGEND",   change: 0,  country: "🇯🇵", easy: 98, med: 142, hard: 72 },
@@ -35,9 +36,47 @@ export default function LeaderboardPage() {
   const [loaded, setLoaded] = useState(false);
   const [hoveredRow, setHoveredRow] = useState(null);
   const canvasRef = useRef(null);
+  const [players, setPlayers] = useState(PLAYERS);
+const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => { setTimeout(() => setLoaded(true), 100); }, []);
+useEffect(() => { setTimeout(() => setLoaded(true), 100); }, []);
 
+useEffect(() => {
+  const fetchData = async () => {
+    const { data } = await supabase
+      .from('users')
+      .select('*')
+      .order('xp', { ascending: false });
+
+    if (data && data.length > 0) {
+      const ranked = data.map((user, index) => ({
+        rank: index + 1,
+        name: user.username || 'Player',
+        xp: user.xp || 0,
+        solved: user.solved || 0,
+        streak: user.streak || 0,
+        tier: user.rank || 'BRONZE',
+        badge: '◈',
+        country: '🌍',
+        change: 0,
+        isMe: false,
+      }));
+      setPlayers(ranked);
+    }
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: userData } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', user.email)
+        .single();
+      setCurrentUser(userData);
+    }
+  };
+  fetchData();
+}, []);
   // Hex canvas bg
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -76,7 +115,7 @@ export default function LeaderboardPage() {
     return () => { cancelAnimationFrame(animId); window.removeEventListener("resize", resize); };
   }, []);
 
-  const filtered = PLAYERS.filter((p) => {
+const filtered = players.filter((p) => {
     const matchTier = tier === "ALL" || p.tier === tier;
     const matchSearch = p.name.toLowerCase().includes(search.toLowerCase());
     return matchTier && matchSearch;
@@ -393,7 +432,7 @@ export default function LeaderboardPage() {
 
           {/* TOP 3 PODIUM */}
           <div className="podium">
-            {[PLAYERS[1], PLAYERS[0], PLAYERS[2]].map((p, i) => {
+            {[players[1] || PLAYERS[1], players[0] || PLAYERS[0], players[2] || PLAYERS[2]].map((p, i) => {
               const actualRank = p.rank;
               const colors = { 1: "#facc15", 2: "#e2e8f0", 3: "#f59e0b" };
               const color = colors[actualRank];
@@ -425,16 +464,18 @@ export default function LeaderboardPage() {
           <div className="my-rank-banner">
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
               <div className="my-rank-label">YOUR RANK</div>
-              <div className="my-rank-num">#4</div>
+              <div className="my-rank-num">
+  #{players.findIndex(p => p.name === currentUser?.username) + 1 || '?'}
+</div>
             </div>
             <div className="my-rank-divider" />
             <div className="my-rank-stat">
-              <div className="my-rank-stat-val">98,450</div>
+              <div className="my-rank-stat-val">{currentUser?.xp || 0}</div>
               <div className="my-rank-stat-lbl">TOTAL XP</div>
             </div>
             <div className="my-rank-divider" />
             <div className="my-rank-stat">
-              <div className="my-rank-stat-val">142</div>
+              <div className="my-rank-stat-val">{currentUser?.solved || 0}</div>
               <div className="my-rank-stat-lbl">SOLVED</div>
             </div>
             <div className="my-rank-divider" />
