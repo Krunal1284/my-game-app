@@ -383,14 +383,14 @@ useEffect(() => {
             </div>
           </div>
 
-          {/* QUICK STATS */}
-          <div className="avatar">{user?.username?.slice(0,2).toUpperCase() || 'KG'}</div>
+        {/* QUICK STATS */}
+          <div className="quick-stats">
             {[
-             { val: user?.solved || 0,  lbl: "PROBLEMS SOLVED" },
-            { val: user?.xp || 0,      lbl: "TOTAL XP" },
-            { val: "#?",               lbl: "GLOBAL RANK" },
-            { val: user?.streak || 0,  lbl: "DAY STREAK" },
-              { val: "3/6",   lbl: "BADGES EARNED" },
+              { val: user?.solved || 0, lbl: "PROBLEMS SOLVED" },
+              { val: user?.xp || 0,     lbl: "TOTAL XP" },
+              { val: "#?",              lbl: "GLOBAL RANK" },
+              { val: user?.streak || 0, lbl: "DAY STREAK" },
+              { val: "3/6",             lbl: "BADGES EARNED" },
             ].map((s) => (
               <div key={s.lbl} className="qs-card">
                 <div className="qs-val">{s.val}</div>
@@ -398,8 +398,7 @@ useEffect(() => {
               </div>
             ))}
           </div>
-
-          {/* TABS */}
+          
           <div className="tabs-row">
             {["overview", "submissions", "badges"].map((t) => (
               <button key={t} className={`tab ${activeTab === t ? "active" : ""}`} onClick={() => setActiveTab(t)}>
