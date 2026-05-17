@@ -1,5 +1,6 @@
 "use client";
 
+import { supabase } from '@/lib/supabase';
 import { useState, useEffect, useRef } from "react";
 
 const QUESTS = [
@@ -31,6 +32,24 @@ export default function Dashboard() {
   const [time, setTime] = useState("");
   const [xpAnim, setXpAnim] = useState(0);
   const canvasRef = useRef(null);
+  const [user, setUser] = useState(null);
+
+    useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        window.location.href = '/login';
+        return;
+      }
+      const { data } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', user.email)
+        .single();
+      setUser(data);
+    };
+    getUser();
+        }, []);
 
   useEffect(() => {
     const t = setInterval(() => {
@@ -796,11 +815,11 @@ export default function Dashboard() {
         {/* ── SIDEBAR ── */}
         <aside className="sidebar">
           <div className="player-card">
-            <div className="player-name">Krunal_GG</div>
-            <div className="player-title">// GOLD TIER CODER</div>
+            <div className="player-name">{user?.username || 'Player'}</div>
+            <div className="player-title">// {user?.rank || 'BRONZE'} TIER CODER</div>
             <div className="xp-row">
-              <span className="xp-text">LVL 21</span>
-              <span className="xp-text">6,800 / 10,000 XP</span>
+            <span className="xp-text">LVL {user?.level || 1}</span>
+             <span className="xp-text">{user?.xp || 0} XP</span>
             </div>
             <div className="xp-bar">
               <div className="xp-fill" style={{ width: `${xpAnim}%` }} />
@@ -857,12 +876,12 @@ export default function Dashboard() {
             <div className="hero-sub">You're 3 problems away from reaching Platinum tier</div>
             <div className="hero-stats">
               <div className="hero-stat">
-                <span className="hero-stat-val">21</span>
+               <span className="hero-stat-val">{user?.streak || 0}</span>
                 <span className="hero-stat-lbl">Day Streak</span>
               </div>
               <div className="hero-divider" />
               <div className="hero-stat">
-                <span className="hero-stat-val">142</span>
+                <span className="hero-stat-val">{user?.solved || 0}</span>
                 <span className="hero-stat-lbl">Solved</span>
               </div>
               <div className="hero-divider" />
@@ -872,7 +891,7 @@ export default function Dashboard() {
               </div>
               <div className="hero-divider" />
               <div className="hero-stat">
-                <span className="hero-stat-val">98K</span>
+                <span className="hero-stat-val">{user?.xp || 0}</span>
                 <span className="hero-stat-lbl">Total XP</span>
               </div>
             </div>
