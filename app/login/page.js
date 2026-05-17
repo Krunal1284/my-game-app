@@ -534,7 +534,7 @@ export default function LoginPage() {
               <div className="rank-dot" />
               <span className="rank-text">GOLD II</span>
             </div>
-            <button className="link">Create Account</button>
+            <button className="link" onClick={() => window.location.href = "/signup"}>Create Account</button>
           </div>
 
           {/* XP bar */}
