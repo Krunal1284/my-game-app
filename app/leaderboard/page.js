@@ -41,7 +41,6 @@ const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => { setTimeout(() => setLoaded(true), 100); }, []);
 useEffect(() => { setTimeout(() => setLoaded(true), 100); }, []);
-
 useEffect(() => {
   const fetchData = async () => {
     const { data } = await supabase
