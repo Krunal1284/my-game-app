@@ -808,7 +808,7 @@ export default function Dashboard() {
           <div className="topbar-right">
             <button className="notif-btn">⚡</button>
             <button className="notif-btn">◈</button>
-            <div className="avatar">KG</div>
+            <div className="avatar">{user?.username?.slice(0,2).toUpperCase() || 'KG'}</div>
           </div>
         </header>
 
@@ -871,7 +871,7 @@ export default function Dashboard() {
           <div className="hero" style={{ marginBottom: 24 }}>
             <div className="hero-tag">// WELCOME BACK, PLAYER</div>
             <div className="hero-title">
-              Ready to <span>Level Up,</span> Krunal?
+              Ready to <span>Level Up,</span> {user?.username || 'Player'}?
             </div>
             <div className="hero-sub">You're 3 problems away from reaching Platinum tier</div>
             <div className="hero-stats">
@@ -903,9 +903,9 @@ export default function Dashboard() {
           {/* Stat cards */}
           <div className="grid3">
             {[
-              { icon: "🗡️", val: "142", lbl: "Quests Solved", change: "+3 this week", bg: "🗡️" },
-              { icon: "🔥", val: "21", lbl: "Day Streak", change: "Personal best!", bg: "🔥" },
-              { icon: "⚡", val: "98K", lbl: "Total XP", change: "+1,200 today", bg: "⚡" },
+             { icon: "🗡️", val: user?.solved || 0, lbl: "Quests Solved", change: "+3 this week", bg: "🗡️" },
+            { icon: "🔥", val: user?.streak || 0, lbl: "Day Streak", change: "Personal best!", bg: "🔥" },
+            { icon: "⚡", val: user?.xp || 0, lbl: "Total XP", change: "+1,200 today", bg: "⚡" },
             ].map((s) => (
               <div key={s.lbl} className="stat-card">
                 <div className="stat-card-icon">{s.icon}</div>
