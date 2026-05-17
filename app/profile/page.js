@@ -1,5 +1,6 @@
 "use client";
 
+import { supabase } from '@/lib/supabase';
 import { useState, useEffect, useRef } from "react";
 
 const BADGES = [
@@ -37,6 +38,24 @@ const LANG_STATS = [
 ];
 
 export default function ProfilePage() {
+    const [user, setUser] = useState(null);
+
+useEffect(() => {
+  const getUser = async () => {
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    if (!authUser) {
+      window.location.href = '/login';
+      return;
+    }
+    const { data } = await supabase
+      .from('users')
+      .select('*')
+      .eq('email', authUser.email)
+      .single();
+    setUser(data);
+  };
+  getUser();
+}, []);
   const [activeTab, setActiveTab] = useState("overview");
   const [loaded, setLoaded] = useState(false);
   // 2. Control heatmap values inside a state hook
@@ -341,14 +360,14 @@ export default function ProfilePage() {
           <div className="profile-hero">
             <div className="profile-avatar-wrap">
               <div className="avatar-glow" />
-              <div className="profile-avatar">KG</div>
+              <div className="profile-avatar">{user?.username?.slice(0,2).toUpperCase() || 'KG'}</div>
               <div className="online-dot" />
             </div>
 
             <div className="profile-info">
               <div className="profile-tag">// PLAYER PROFILE</div>
-              <div className="profile-name">Krunal_GG</div>
-              <div className="profile-title">GOLD TIER CODER · SEASON 4</div>
+             <div className="profile-name">{user?.username || 'Player'}</div>
+              <div className="profile-title">{user?.rank || 'BRONZE'} TIER CODER · SEASON 4</div>
               <div className="profile-chips">
                 <div className="profile-chip gold">◈ GOLD II</div>
                 <div className="profile-chip">🔥 21 DAY STREAK</div>
@@ -365,12 +384,12 @@ export default function ProfilePage() {
           </div>
 
           {/* QUICK STATS */}
-          <div className="quick-stats">
+          <div className="avatar">{user?.username?.slice(0,2).toUpperCase() || 'KG'}</div>
             {[
-              { val: "142",   lbl: "PROBLEMS SOLVED" },
-              { val: "98K",   lbl: "TOTAL XP" },
-              { val: "#247",  lbl: "GLOBAL RANK" },
-              { val: "21",    lbl: "DAY STREAK" },
+             { val: user?.solved || 0,  lbl: "PROBLEMS SOLVED" },
+            { val: user?.xp || 0,      lbl: "TOTAL XP" },
+            { val: "#?",               lbl: "GLOBAL RANK" },
+            { val: user?.streak || 0,  lbl: "DAY STREAK" },
               { val: "3/6",   lbl: "BADGES EARNED" },
             ].map((s) => (
               <div key={s.lbl} className="qs-card">
