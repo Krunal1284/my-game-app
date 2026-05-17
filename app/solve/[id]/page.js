@@ -1,5 +1,6 @@
 "use client";
 
+import { supabase } from '@/lib/supabase';
 import { useState, useEffect, useRef } from "react";
 
 const PROBLEM = {
@@ -175,16 +176,37 @@ export default function SolvePage() {
     }, 1800);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setRunStatus("running");
     setSubmitStatus(null);
-    setTimeout(() => {
+    setTimeout(async () => {
       setTimerActive(false);
       setRunStatus(null);
       setSubmitStatus("accepted");
       setShowXPBurst(true);
       setActiveBottom("result");
       setTimeout(() => setShowXPBurst(false), 3000);
+
+      // Save XP to database
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: userData } = await supabase
+          .from('users')
+          .select('*')
+          .eq('email', user.email)
+          .single();
+
+        if (userData) {
+          await supabase
+            .from('users')
+            .update({
+              xp: (userData.xp || 0) + PROBLEM.xp,
+              solved: (userData.solved || 0) + 1,
+              level: Math.floor(((userData.xp || 0) + PROBLEM.xp) / 1000) + 1,
+            })
+            .eq('email', user.email);
+        }
+      }
     }, 2400);
   };
 
