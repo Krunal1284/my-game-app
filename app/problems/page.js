@@ -165,20 +165,6 @@ export default function ProblemsPage() {
         /* STATS ROW */
         .stats-row {
           display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
-          @media (max-width: 768px) {
-  .main { padding: 16px; }
-  .stats-row { grid-template-columns: repeat(2, 1fr); }
-  .filters { flex-direction: column; }
-  .filter-group { flex-wrap: wrap; }
-  .table-header { display: none; }
-  .problem-row {
-    grid-template-columns: 40px 1fr 80px 50px !important;
-  }
-  .row-acceptance { display: none; }
-  .row-action { display: none; }
-  .nav-links { display: none; }
-  .page-title { font-size: 24px; }
-}
           margin-bottom: 24px;
           opacity: ${loaded ? 1 : 0};
           transform: translateY(${loaded ? 0 : 12}px);
@@ -386,8 +372,20 @@ export default function ProblemsPage() {
           cursor: pointer; letter-spacing: 2px; transition: color 0.2s;
         }
         .sort-btn:hover { color: #facc15; }
+      @media (max-width: 768px) {
+          .main { padding: 16px; }
+          .stats-row { grid-template-columns: repeat(2, 1fr) !important; }
+          .filters { flex-direction: column; }
+          .filter-group { flex-wrap: wrap; }
+          .table-header { display: none; }
+          .problem-row { grid-template-columns: 40px 1fr 80px 50px !important; }
+          .row-acceptance { display: none; }
+          .row-action { display: none; }
+          .nav-links { display: none; }
+          .page-title { font-size: 24px !important; }
+          .topbar { padding: 0 16px; }
+        }
       `}</style>
-
       <div className="page">
         {/* TOPBAR */}
         <header className="topbar">
