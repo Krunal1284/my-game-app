@@ -1091,7 +1091,6 @@ export default function Dashboard() {
 
       {/* MOBILE BOTTOM NAV */}
       <nav style={{
-        display: 'none',
         position: 'fixed', bottom: 0, left: 0, right: 0,
         background: 'rgba(8,8,16,0.98)',
         borderTop: '1px solid rgba(250,204,21,0.15)',
