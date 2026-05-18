@@ -170,6 +170,12 @@ export default function Dashboard() {
   .layout {
     grid-template-columns: 1fr;
   }
+    .mobile-nav {
+    display: grid !important;
+  }
+  .main {
+    padding-bottom: 80px !important;
+  }
   .sidebar {
     display: none !important;
   }
@@ -1082,6 +1088,39 @@ export default function Dashboard() {
 
         </main>
       </div>
+
+      {/* MOBILE BOTTOM NAV */}
+      <nav style={{
+        display: 'none',
+        position: 'fixed', bottom: 0, left: 0, right: 0,
+        background: 'rgba(8,8,16,0.98)',
+        borderTop: '1px solid rgba(250,204,21,0.15)',
+        padding: '10px 0',
+        zIndex: 200,
+        gridTemplateColumns: 'repeat(5, 1fr)',
+        gap: 0,
+      }} className="mobile-nav">
+        {[
+          { icon: "⬡", label: "Home", link: "/dashboard" },
+          { icon: "◈", label: "Quests", link: "/problems" },
+          { icon: "⚔", label: "Arena", link: "/arena" },
+          { icon: "◆", label: "Board", link: "/leaderboard" },
+          { icon: "◉", label: "Profile", link: "/profile" },
+        ].map((item) => (
+          <button key={item.label}
+            onClick={() => window.location.href = item.link}
+            style={{
+              background: 'none', border: 'none', color: 'rgba(250,204,21,0.5)',
+              display: 'flex', flexDirection: 'column', alignItems: 'center',
+              gap: '4px', cursor: 'pointer', padding: '4px 0', width: '100%',
+            }}>
+            <span style={{ fontSize: 18 }}>{item.icon}</span>
+            <span style={{ fontSize: 9, letterSpacing: 1, fontFamily: "'Share Tech Mono', monospace" }}>
+              {item.label}
+            </span>
+          </button>
+        ))}
+      </nav>
     </>
   );
 }
