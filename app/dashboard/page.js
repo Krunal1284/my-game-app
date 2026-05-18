@@ -171,17 +171,17 @@ export default function Dashboard() {
     grid-template-columns: 1fr;
   }
   .sidebar {
-    display: none;
+    display: none !important;
   }
   .topbar {
     padding: 0 12px;
     overflow: hidden;
   }
-  .topbar-center {
-    display: none;
+  .topbar-center { /* desktop only */
+     display: none !important;
   }
   .topbar-right .notif-btn {
-    display: none;
+    display: none !important;
   }
   .main {
     padding: 12px;
@@ -205,7 +205,7 @@ export default function Dashboard() {
     flex-wrap: wrap;
   }
   .daily-btn {
-    display: none;
+    display: none !important;
   }
   .hero-stat-val {
     font-size: 16px !important;
@@ -253,7 +253,7 @@ export default function Dashboard() {
           font-size: 12px;
         }
 
-        .topbar-center {
+        .topbar-center { /* desktop only */
           display: flex;
           align-items: center;
           gap: 24px;
