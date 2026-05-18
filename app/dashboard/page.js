@@ -158,13 +158,50 @@ export default function Dashboard() {
         }
 
         .layout {
-          position: relative;
-          z-index: 1;
-          min-height: 100vh;
-          display: grid;
-          grid-template-columns: 220px 1fr;
-          grid-template-rows: auto 1fr;
-        }
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  grid-template-rows: auto 1fr;
+}
+
+@media (max-width: 768px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+  .sidebar {
+    display: none;
+  }
+  .topbar {
+    padding: 0 16px;
+  }
+  .main {
+    padding: 16px;
+  }
+  .grid2 {
+    grid-template-columns: 1fr !important;
+  }
+  .grid3 {
+    grid-template-columns: 1fr !important;
+  }
+  .hero {
+    padding: 20px 16px;
+  }
+  .hero-title {
+    font-size: 18px !important;
+  }
+  .daily-btn {
+    display: none;
+  }
+  .hero-stats {
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .topbar-center {
+    display: none;
+  }
+}
 
         /* ── TOPBAR ── */
         .topbar {
