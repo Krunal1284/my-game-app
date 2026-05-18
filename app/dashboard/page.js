@@ -174,10 +174,18 @@ export default function Dashboard() {
     display: none;
   }
   .topbar {
-    padding: 0 16px;
+    padding: 0 12px;
+    overflow: hidden;
+  }
+  .topbar-center {
+    display: none;
+  }
+  .topbar-right .notif-btn {
+    display: none;
   }
   .main {
-    padding: 16px;
+    padding: 12px;
+    overflow-x: hidden;
   }
   .grid2 {
     grid-template-columns: 1fr !important;
@@ -186,20 +194,24 @@ export default function Dashboard() {
     grid-template-columns: 1fr !important;
   }
   .hero {
-    padding: 20px 16px;
+    padding: 16px;
+    clip-path: none !important;
   }
   .hero-title {
-    font-size: 18px !important;
+    font-size: 16px !important;
+  }
+  .hero-stats {
+    gap: 8px;
+    flex-wrap: wrap;
   }
   .daily-btn {
     display: none;
   }
-  .hero-stats {
-    gap: 12px;
-    flex-wrap: wrap;
+  .hero-stat-val {
+    font-size: 16px !important;
   }
-  .topbar-center {
-    display: none;
+  body {
+    overflow-x: hidden;
   }
 }
 
@@ -828,9 +840,9 @@ export default function Dashboard() {
       <canvas ref={canvasRef} />
       <div className="bg-overlay" />
 
-      <div className="layout">
+      <div className="layout" style={{maxWidth:'100vw', overflowX:'hidden'}}>
         {/* ── TOPBAR ── */}
-        <header className="topbar">
+        <header className="topbar" style={{overflow:'hidden'}}>
           <div className="logo">
             <div className="logo-hex">⬡</div>
             CODEARENA
