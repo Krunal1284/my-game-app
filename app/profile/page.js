@@ -334,13 +334,13 @@ useEffect(() => {
           .topbar { padding: 0 16px; }
           .nav-links { display: none; }
           .main { padding: 16px; }
-          .profile-hero { grid-template-columns: auto 1fr; gap: 16px; padding: 20px 16px; clip-path: none; }
+          .profile-hero { grid-template-columns: 1fr; gap: 16px; padding: 20px 16px; clip-path: none; }
           .profile-right { display: none; }
           .profile-avatar { width: 64px; height: 64px; font-size: 20px; }
           .profile-name { font-size: 18px; }
           .profile-chips { gap: 6px; }
           .profile-chip { font-size: 8px; padding: 3px 8px; }
-          .quick-stats { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+          .quick-stats { grid-template-columns: repeat(2, 1fr); gap: 8px; }
           .quick-stats > :nth-child(4), .quick-stats > :nth-child(5) { grid-column: span 1; }
           .qs-val { font-size: 18px; }
           .tabs-row { overflow-x: auto; }
