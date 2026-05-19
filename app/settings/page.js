@@ -334,6 +334,31 @@ export default function SettingsPage() {
           letter-spacing: 2px; cursor: pointer; transition: all 0.2s;
         }
         .cancel-btn:hover { border-color: rgba(255,255,255,0.25); color: rgba(255,255,255,0.6); }
+
+        @media (max-width: 768px) {
+          .topbar { padding: 0 16px; }
+          .nav-links { display: none; }
+          .layout { grid-template-columns: 1fr; }
+          .sidebar { border-right: none; border-bottom: 1px solid rgba(250,204,21,0.08); padding: 12px 0; display: flex; flex-wrap: wrap; gap: 4px; padding: 12px; }
+          .sidebar-title { display: none; }
+          .sidebar-divider { display: none; }
+          .sidebar-item { width: auto; padding: 8px 12px; font-size: 11px; border: 1px solid rgba(250,204,21,0.1); }
+          .sidebar-item.active { border-color: rgba(250,204,21,0.4); }
+          .sidebar-item.active::before { display: none; }
+          .item-icon { font-size: 12px; }
+          .main { padding: 20px 16px; max-height: none; }
+          .form-row { grid-template-columns: 1fr; }
+          .theme-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+          .stat-pills { gap: 8px; }
+          .stat-pill { padding: 6px 10px; }
+          .pill-val { font-size: 14px; }
+          .avatar-section { gap: 16px; }
+          .big-avatar { width: 56px; height: 56px; font-size: 18px; }
+          .actions-row { flex-direction: column; align-items: stretch; }
+          .save-btn, .cancel-btn { text-align: center; }
+          .danger-row { flex-direction: column; gap: 10px; align-items: flex-start; }
+          .toast { bottom: 16px; right: 16px; left: 16px; }
+        }
       `}</style>
 
       {saved && (
