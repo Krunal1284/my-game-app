@@ -149,6 +149,23 @@ export default function ArenaPage() {
         .action-button:hover { background: #eab308; }
         
         .outcome-banner { font-family: 'Orbitron'; font-size: 28px; font-weight: 900; padding: 10px; margin-bottom: 20px; letter-spacing: 2px; }
+        .mobile-nav { display: none; }
+
+        @media (max-width: 768px) {
+          .topbar { padding: 0 16px; }
+          .nav-links { display: none; }
+          .arena-page { padding: 16px; padding-top: 76px; padding-bottom: 80px; }
+          .main-grid { grid-template-columns: 1fr; gap: 16px; margin-top: 16px; }
+          .hero-panel { padding: 24px 16px; clip-path: none; }
+          .arena-title { font-size: 28px; }
+          .queue-btn { padding: 14px 24px; font-size: 12px; width: 100%; }
+          .live-match-row { flex-direction: column; align-items: flex-start; gap: 8px; }
+          .vs-block { flex-wrap: wrap; }
+          .match-card { padding: 20px 16px; }
+          .versus-header { gap: 20px; }
+          .vs-name { font-size: 16px; }
+          .mobile-nav { display: grid !important; }
+        }
       `}</style>
 
       {/* TOPBAR NAVBAR */}
@@ -266,7 +283,39 @@ export default function ArenaPage() {
             </div>
           </div>
         </div>
-      </div>
-    </>
+      </div> {/* closes arena-page */}
+
+      <nav style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0,
+        background: 'rgba(8,8,16,0.98)',
+        borderTop: '1px solid rgba(250,204,21,0.15)',
+        padding: '10px 0',
+        zIndex: 200,
+        gridTemplateColumns: 'repeat(5, 1fr)',
+      }} className="mobile-nav">
+        {[
+          { icon: "⬡", label: "Home", link: "/dashboard" },
+          { icon: "◈", label: "Quests", link: "/problems" },
+          { icon: "⚔", label: "Arena", link: "/arena" },
+          { icon: "◆", label: "Board", link: "/leaderboard" },
+          { icon: "■", label: "Settings", link: "/settings" },
+        ].map((item) => (
+          <button key={item.label}
+            onClick={() => window.location.href = item.link}
+            style={{
+              background: 'none', border: 'none',
+              color: item.link === '/arena' ? '#ef4444' : 'rgba(250,204,21,0.5)',
+              display: 'flex', flexDirection: 'column', alignItems: 'center',
+              gap: '4px', cursor: 'pointer', padding: '4px 0', width: '100%',
+            }}>
+            <span style={{ fontSize: 18 }}>{item.icon}</span>
+            <span style={{ fontSize: 9, letterSpacing: 1, fontFamily: "'Share Tech Mono', monospace" }}>
+              {item.label}
+            </span>
+          </button>
+        ))}
+      </nav>
+     </>
   );
 }
+    
