@@ -386,6 +386,29 @@ const filtered = players.filter((p) => {
         .live-indicator { display: flex; align-items: center; gap: 6px; font-family: 'Share Tech Mono', monospace; font-size: 9px; color: rgba(255,255,255,0.25); letter-spacing: 2px; }
         .live-dot { width: 6px; height: 6px; background: #22c55e; border-radius: 50%; animation: livePulse 1.4s infinite; }
         @keyframes livePulse { 0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,0.5)} 50%{box-shadow:0 0 0 5px rgba(34,197,94,0)} }
+
+        @media (max-width: 768px) {
+          .main { padding: 16px; }
+          .topbar { padding: 0 16px; }
+          .nav-links { display: none; }
+          .page-title { font-size: 24px !important; }
+          .podium { gap: 8px; }
+          .podium-block { width: 100px !important; }
+          .podium-avatar { width: 50px !important; height: 50px !important; font-size: 16px !important; }
+          .podium-name { font-size: 10px; }
+          .podium-xp { font-size: 9px; }
+          .my-rank-banner { flex-wrap: wrap; gap: 10px; }
+          .my-rank-progress { width: 100%; }
+          .filters-row { flex-direction: column; }
+          .tier-filters { flex-wrap: wrap; }
+          .table-header { display: none; }
+          .player-row { grid-template-columns: 48px 1fr 80px 70px !important; }
+          .col-country { display: none; }
+          .col-tier { display: none; }
+          .col-streak { display: none; }
+          .period-tabs { flex-wrap: wrap; gap: 6px; }
+          .period-tab { padding: 6px 12px; font-size: 9px; }
+        }
       `}</style>
 
       <canvas ref={canvasRef} />
