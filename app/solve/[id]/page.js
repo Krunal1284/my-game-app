@@ -194,8 +194,12 @@ export default function SolvePage() {
     const results = testCases.map((tc) => ({
       ...tc,
       output,
-      status: data.run.stderr ? "fail" : "pass",
-    }));
+       status: data.run.stderr 
+       ? "fail" 
+       : output.trim() === tc.expected.trim() 
+       ? "pass" 
+        : "fail",
+      }));
 
     setTestCases(results);
     setRunStatus("passed");
