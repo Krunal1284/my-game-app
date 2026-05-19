@@ -869,8 +869,7 @@ export default function Dashboard() {
           <div className="topbar-right">
             <button className="notif-btn">⚡</button>
             <button className="notif-btn">◈</button>
-            <div className="avatar" onClick={() => window.location.href = '/settings'} style={{cursor:'pointer'}}>{user?.username?.slice(0,2).toUpperCase() || 'KG'}</div>
-          </div>
+            <div className="avatar" onClick={() => supabase.auth.signOut().then(() => window.location.href = '/login')} style={{cursor:'pointer'}}>{user?.username?.slice(0,2).toUpperCase() || 'KG'}</div>          </div>
         </header>
 
         {/* ── SIDEBAR ── */}

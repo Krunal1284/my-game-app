@@ -166,15 +166,43 @@ export default function SolvePage() {
     }
   };
 
-  const handleRun = () => {
-    setRunStatus("running");
-    setActiveBottom("testcases");
-    setTimeout(() => {
-      const results = testCases.map((tc, i) => ({ ...tc, status: i < 2 ? "pass" : "fail" }));
-      setTestCases(results);
-      setRunStatus("passed");
-    }, 1800);
+  const handleRun = async () => {
+  setRunStatus("running");
+  setActiveBottom("testcases");
+
+  const langMap = {
+    python: "python",
+    javascript: "node",
+    java: "java",
+    cpp: "c++",
   };
+
+  try {
+    const response = await fetch("https://emkc.org/api/v2/piston/execute", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        language: langMap[lang],
+        version: "*",
+        files: [{ content: code }],
+      }),
+    });
+
+    const data = await response.json();
+    const output = data.run.stdout || data.run.stderr || "No output";
+
+    const results = testCases.map((tc) => ({
+      ...tc,
+      output,
+      status: data.run.stderr ? "fail" : "pass",
+    }));
+
+    setTestCases(results);
+    setRunStatus("passed");
+  } catch (err) {
+    setRunStatus("failed");
+  }
+};
 
   const handleSubmit = async () => {
     setRunStatus("running");
@@ -789,9 +817,10 @@ export default function SolvePage() {
                             CASE {tc.id}
                           </div>
                           <div className="tc-io">
-                            <span>IN:</span> {tc.input}<br />
-                            <span>EXP:</span> {tc.expected}
-                          </div>
+                      <span>IN:</span> {tc.input}<br />
+                       <span>EXP:</span> {tc.expected}<br />
+                      {tc.output && <><span>OUT:</span> {tc.output}</>}
+                      </div>
                         </div>
                       ))}
                     </div>
