@@ -6,10 +6,10 @@ import { useState, useEffect, useRef } from "react";
 const BADGES = [
   { icon: "⚡", label: "Speed Coder",  earned: true,  desc: "Solved a problem in under 5 min" },
   { icon: "🔥", label: "21 Day Streak", earned: true,  desc: "Maintained a 21 day streak" },
-  { icon: "◈",  label: "Array Master", earned: true,  desc: "Solved 50+ array problems" },
-  { icon: "◉",  label: "Tree Slayer",  earned: false, desc: "Solve 20 tree problems" },
-  { icon: "∞",  label: "DP Wizard",    earned: false, desc: "Solve 15 DP problems" },
-  { icon: "⬡",  label: "Legend",       earned: false, desc: "Reach Legend tier" },
+  { icon: "🎯", label: "Array Master", earned: true,  desc: "Solved 50+ array problems" },
+  { icon: "🌳", label: "Tree Slayer",  earned: false, desc: "Solve 20 tree problems" },
+  { icon: "🧠", label: "DP Wizard",    earned: false, desc: "Solve 15 DP problems" },
+  { icon: "👑", label: "Legend",       earned: false, desc: "Reach Legend tier" },
 ];
 
 const RECENT = [
@@ -391,11 +391,11 @@ useEffect(() => {
             </div>
 
             <div className="profile-info">
-              <div className="profile-tag">// PLAYER PROFILE</div>
+              <div className="profile-tag">PLAYER PROFILE</div>
              <div className="profile-name">{user?.username || 'Player'}</div>
               <div className="profile-title">{user?.rank || 'BRONZE'} TIER CODER · SEASON 4</div>
               <div className="profile-chips">
-                <div className="profile-chip gold">◈ GOLD II</div>
+                <div className="profile-chip gold">🥇 GOLD II</div>
                 <div className="profile-chip">🔥 21 DAY STREAK</div>
                 <div className="profile-chip">🌍 INDIA</div>
                 <div className="profile-chip"># 247 GLOBAL</div>
