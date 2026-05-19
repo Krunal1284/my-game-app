@@ -329,8 +329,28 @@ useEffect(() => {
         .rank-bar { height: 5px; background: rgba(255,255,255,0.05); overflow: hidden; margin-bottom: 10px; }
         .rank-fill { height: 100%; background: linear-gradient(90deg,#facc15,#f59e0b); transition: width 1.5s cubic-bezier(0.4,0,0.2,1); }
         .rank-next { font-family: 'Share Tech Mono', monospace; font-size: 9px; color: rgba(255,255,255,0.25); letter-spacing: 2px; text-align: right; }
-      `}</style>
 
+        @media (max-width: 768px) {
+          .topbar { padding: 0 16px; }
+          .nav-links { display: none; }
+          .main { padding: 16px; }
+          .profile-hero { grid-template-columns: auto 1fr; gap: 16px; padding: 20px 16px; clip-path: none; }
+          .profile-right { display: none; }
+          .profile-avatar { width: 64px; height: 64px; font-size: 20px; }
+          .profile-name { font-size: 18px; }
+          .profile-chips { gap: 6px; }
+          .profile-chip { font-size: 8px; padding: 3px 8px; }
+          .quick-stats { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+          .quick-stats > :nth-child(4), .quick-stats > :nth-child(5) { grid-column: span 1; }
+          .qs-val { font-size: 18px; }
+          .tabs-row { overflow-x: auto; }
+          .tab { padding: 10px 14px; font-size: 9px; white-space: nowrap; }
+          .content-grid { grid-template-columns: 1fr; }
+          .content-right { order: -1; }
+          .heatmap-wrap { overflow-x: auto; }
+          .badges-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+      `}</style>
       <canvas ref={canvasRef} />
       <div className="bg-overlay" />
 
@@ -398,7 +418,7 @@ useEffect(() => {
               </div>
             ))}
           </div>
-          
+
           <div className="tabs-row">
             {["overview", "submissions", "badges"].map((t) => (
               <button key={t} className={`tab ${activeTab === t ? "active" : ""}`} onClick={() => setActiveTab(t)}>
