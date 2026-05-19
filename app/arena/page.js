@@ -294,11 +294,11 @@ export default function ArenaPage() {
         gridTemplateColumns: 'repeat(5, 1fr)',
       }} className="mobile-nav">
         {[
-          { icon: "⬡", label: "Home", link: "/dashboard" },
-          { icon: "◈", label: "Quests", link: "/problems" },
-          { icon: "⚔", label: "Arena", link: "/arena" },
-          { icon: "◆", label: "Board", link: "/leaderboard" },
-         { icon: "⚙️", label: "Settings", link: "/settings" },
+          { icon: "🏠", label: "Home", link: "/dashboard" },
+        { icon: "📋", label: "Quests", link: "/problems" },
+        { icon: "⚔️", label: "Arena", link: "/arena" },
+{ icon: "🏆", label: "Board", link: "/leaderboard" },
+{ icon: "⚙️", label: "Settings", link: "/settings" },
         ].map((item) => (
           <button key={item.label}
             onClick={() => window.location.href = item.link}
