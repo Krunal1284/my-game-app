@@ -869,7 +869,7 @@ export default function Dashboard() {
           <div className="topbar-right">
             <button className="notif-btn">⚡</button>
             <button className="notif-btn">◈</button>
-            <div className="avatar">{user?.username?.slice(0,2).toUpperCase() || 'KG'}</div>
+            <div className="avatar" onClick={() => window.location.href = '/settings'} style={{cursor:'pointer'}}>{user?.username?.slice(0,2).toUpperCase() || 'KG'}</div>
           </div>
         </header>
 
@@ -1105,10 +1105,10 @@ export default function Dashboard() {
       }} className="mobile-nav">
         {[
           { icon: "⬡", label: "Home", link: "/dashboard" },
-          { icon: "◈", label: "Quests", link: "/problems" },
-          { icon: "⚔", label: "Arena", link: "/arena" },
-          { icon: "◆", label: "Board", link: "/leaderboard" },
-          { icon: "◉", label: "Profile", link: "/profile" },
+        { icon: "◈", label: "Quests", link: "/problems" },
+        { icon: "⚔", label: "Arena", link: "/arena" },
+        { icon: "◉", label: "Profile", link: "/profile" },
+        { icon: "■", label: "Settings", link: "/settings" },
         ].map((item) => (
           <button key={item.label}
             onClick={() => window.location.href = item.link}
