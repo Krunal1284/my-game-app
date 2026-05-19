@@ -894,10 +894,11 @@ export default function Dashboard() {
           <div className="nav-section">
             <div className="nav-label">// NAVIGATE</div>
             {[
-              { icon: "⬡", label: "Dashboard", active: true, link: "/dashboard" },
-              { icon: "◈", label: "Quests", count: "247", link: "/problems" },
-             { icon: "⚔", label: "Arena (Live)", link: "/arena" },
-              { icon: "◆", label: "Leaderboard", link: "/leaderboard" },
+             { icon: "🏠", label: "Home", link: "/dashboard" },
+            { icon: "📋", label: "Quests", link: "/problems" },
+            { icon: "⚔️", label: "Arena", link: "/arena" },
+            { icon: "🏆", label: "Board", link: "/leaderboard" },
+            { icon: "⚙️", label: "Settings", link: "/settings" },
             ].map((item) => (
              <button key={item.label}
                  className={`nav-item ${item.active ? "active" : ""}`}
@@ -912,9 +913,9 @@ export default function Dashboard() {
           <div className="nav-section">
             <div className="nav-label">// PLAYER</div>
             {[
-             { icon: "◉", label: "My Profile", link: "/profile" },
-            { icon: "▸", label: "Submissions", link: "/problems" },
-            { icon: "■", label: "Settings", link: "/settings" },
+             { icon: "👤", label: "My Profile", link: "/profile" },
+            { icon: "📋", label: "Submissions", link: "/problems" },
+            { icon: "⚙️", label: "Settings", link: "/settings" },
             ].map((item) => (
              <button key={item.label} className="nav-item"
              onClick={() => item.link && (window.location.href = item.link)}>
@@ -1104,11 +1105,10 @@ export default function Dashboard() {
         gap: 0,
       }} className="mobile-nav">
         {[
-          { icon: "⬡", label: "Home", link: "/dashboard" },
-        { icon: "◈", label: "Quests", link: "/problems" },
-        { icon: "⚔", label: "Arena", link: "/arena" },
-        { icon: "◆", label: "Board", link: "/leaderboard" },
-        { icon: "⚙️", label: "Settings", link: "/settings" },
+        { icon: "🏠", label: "Dashboard", active: true, link: "/dashboard" },
+        { icon: "📋", label: "Quests", count: "247", link: "/problems" },
+        { icon: "⚔️", label: "Arena (Live)", link: "/arena" },
+        { icon: "🏆", label: "Leaderboard", link: "/leaderboard" },
         ].map((item) => (
           <button key={item.label}
             onClick={() => window.location.href = item.link}
