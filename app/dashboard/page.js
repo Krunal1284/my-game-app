@@ -877,7 +877,7 @@ export default function Dashboard() {
         <aside className="sidebar">
           <div className="player-card">
             <div className="player-name">{user?.username || 'Player'}</div>
-            <div className="player-title">// {user?.rank || 'BRONZE'} TIER CODER</div>
+            <div className="player-title">{user?.rank || 'BRONZE'} TIER CODER</div>
             <div className="xp-row">
             <span className="xp-text">LVL {user?.level || 1}</span>
              <span className="xp-text">{user?.xp || 0} XP</span>
@@ -892,7 +892,7 @@ export default function Dashboard() {
           </div>
 
           <div className="nav-section">
-            <div className="nav-label">// NAVIGATE</div>
+            <div className="nav-label">NAVIGATE</div>
             {[
              { icon: "🏠", label: "Home", link: "/dashboard" },
             { icon: "📋", label: "Quests", link: "/problems" },
@@ -911,7 +911,7 @@ export default function Dashboard() {
           </div>
 
           <div className="nav-section">
-            <div className="nav-label">// PLAYER</div>
+            <div className="nav-label">PLAYER</div>
             {[
              { icon: "👤", label: "My Profile", link: "/profile" },
             { icon: "📋", label: "Submissions", link: "/problems" },
@@ -931,7 +931,7 @@ export default function Dashboard() {
 
           {/* Hero */}
           <div className="hero" style={{ marginBottom: 24 }}>
-            <div className="hero-tag">// WELCOME BACK, PLAYER</div>
+            <div className="hero-tag">WELCOME BACK, PLAYER</div>
             <div className="hero-title">
               Ready to <span>Level Up,</span> {user?.username || 'Player'}?
             </div>
