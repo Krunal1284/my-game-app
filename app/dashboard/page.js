@@ -1109,6 +1109,7 @@ export default function Dashboard() {
         { icon: "📋", label: "Quests", count: "247", link: "/problems" },
         { icon: "⚔️", label: "Arena (Live)", link: "/arena" },
         { icon: "🏆", label: "Leaderboard", link: "/leaderboard" },
+        { icon: "⚙️", label: "Settings", link: "/settings" },
         ].map((item) => (
           <button key={item.label}
             onClick={() => window.location.href = item.link}
