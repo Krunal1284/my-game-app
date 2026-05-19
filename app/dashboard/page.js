@@ -1107,7 +1107,7 @@ export default function Dashboard() {
           { icon: "⬡", label: "Home", link: "/dashboard" },
         { icon: "◈", label: "Quests", link: "/problems" },
         { icon: "⚔", label: "Arena", link: "/arena" },
-        { icon: "◉", label: "Profile", link: "/profile" },
+        { icon: "◆", label: "Board", link: "/leaderboard" },
         { icon: "■", label: "Settings", link: "/settings" },
         ].map((item) => (
           <button key={item.label}
