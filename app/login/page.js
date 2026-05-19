@@ -484,7 +484,7 @@ export default function LoginPage() {
             <div className="logo-icon">⬡</div>
             <span className="logo-text">CodeArena</span>
           </div>
-          <div className="tagline">// Competitive Programming Platform</div>
+          <div className="tagline">Competitive Programming Platform</div>
 
           {/* Stats bar */}
           <div className="stats-bar">
@@ -508,7 +508,7 @@ export default function LoginPage() {
             <div className="field">
               <label className="field-label">Player ID</label>
               <div className="input-wrap">
-                <span className="input-icon">▸</span>
+                <span className="input-icon">@</span>
                 <input
                   type="email"
                   placeholder="player@arena.gg"
@@ -523,7 +523,7 @@ export default function LoginPage() {
             <div className="field">
               <label className="field-label">Auth Token</label>
               <div className="input-wrap">
-                <span className="input-icon">■</span>
+                <span className="input-icon">🔒</span>
                 <input
                   type="password"
                   placeholder="••••••••••••"
