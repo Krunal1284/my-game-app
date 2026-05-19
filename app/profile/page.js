@@ -331,25 +331,25 @@ useEffect(() => {
         .rank-next { font-family: 'Share Tech Mono', monospace; font-size: 9px; color: rgba(255,255,255,0.25); letter-spacing: 2px; text-align: right; }
 
         @media (max-width: 768px) {
-          .topbar { padding: 0 16px; }
-          .nav-links { display: none; }
-          .main { padding: 16px; }
-          .profile-hero { grid-template-columns: 1fr; gap: 16px; padding: 20px 16px; clip-path: none; }
-          .profile-right { display: none; }
-          .profile-avatar { width: 64px; height: 64px; font-size: 20px; }
-          .profile-name { font-size: 18px; }
-          .profile-chips { gap: 6px; }
-          .profile-chip { font-size: 8px; padding: 3px 8px; }
-          .quick-stats { grid-template-columns: repeat(2, 1fr); gap: 8px; }
-          .quick-stats > :nth-child(4), .quick-stats > :nth-child(5) { grid-column: span 1; }
-          .qs-val { font-size: 18px; }
-          .tabs-row { overflow-x: auto; }
-          .tab { padding: 10px 14px; font-size: 9px; white-space: nowrap; }
-          .content-grid { grid-template-columns: 1fr; }
-          .content-right { order: -1; }
-          .heatmap-wrap { overflow-x: auto; }
-          .badges-grid { grid-template-columns: repeat(3, 1fr); }
-        }
+  .topbar { padding: 0 16px; }
+  .nav-links { display: none; }
+  .main { padding: 16px; }
+  .profile-hero { display: flex; flex-direction: column; gap: 12px; padding: 20px 16px; clip-path: none; }
+  .profile-right { display: none; }
+  .profile-avatar { width: 64px; height: 64px; font-size: 20px; }
+  .profile-name { font-size: 18px; }
+  .profile-chips { gap: 6px; }
+  .profile-chip { font-size: 8px; padding: 3px 8px; }
+  .quick-stats { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .quick-stats > :last-child { grid-column: span 2; }
+  .qs-val { font-size: 18px; }
+  .tabs-row { overflow-x: auto; }
+  .tab { padding: 10px 14px; font-size: 9px; white-space: nowrap; }
+  .content-grid { grid-template-columns: 1fr; }
+  .content-right { order: -1; }
+  .heatmap-wrap { overflow-x: auto; }
+  .badges-grid { grid-template-columns: repeat(3, 1fr); }
+}
       `}</style>
       <canvas ref={canvasRef} />
       <div className="bg-overlay" />
