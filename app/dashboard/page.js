@@ -36,22 +36,26 @@ export default function Dashboard() {
   const [user, setUser] = useState(null);
 
     useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        window.location.href = '/login';
-        return;
-      }
-      await updateStreak(user.email);
-      const { data } = await supabase
-        .from('users')
-        .select('*')
-        .eq('email', user.email)
-        .single();
-      setUser(data);
-    };
-    getUser();
-        }, []);
+  const getUser = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      window.location.href = '/login';
+      return;
+    }
+    
+    // ← ADD THIS LINE to clean the URL
+    if (window.location.hash) window.history.replaceState(null, '', '/dashboard');
+    
+    await updateStreak(user.email);
+    const { data } = await supabase
+      .from('users')
+      .select('*')
+      .eq('email', user.email)
+      .single();
+    setUser(data);
+  };
+  getUser();
+}, []);
 
   useEffect(() => {
     const t = setInterval(() => {
