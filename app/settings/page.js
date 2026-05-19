@@ -410,7 +410,7 @@ export default function SettingsPage() {
           {active === "profile" && (
             <>
               <div className="section-head">
-                <div className="section-tag">// PLAYER PROFILE</div>
+                <div className="section-tag">//PLAYER PROFILE</div>
                 <div className="section-title">Edit Profile</div>
               </div>
 
@@ -421,7 +421,7 @@ export default function SettingsPage() {
                     <div className="big-avatar">KG</div>
                     <div className="avatar-info">
                       <div className="avatar-name">{username}</div>
-                      <div className="avatar-tier">// GOLD II · LEVEL 21</div>
+                      <div className="avatar-tier">GOLD II · LEVEL 21</div>
                       <button className="change-avatar-btn">CHANGE AVATAR</button>
                     </div>
                   </div>
@@ -478,7 +478,7 @@ export default function SettingsPage() {
           {active === "account" && (
             <>
               <div className="section-head">
-                <div className="section-tag">// ACCOUNT</div>
+                <div className="section-tag">ACCOUNT</div>
                 <div className="section-title">Account & Security</div>
               </div>
               <div className="card">
@@ -530,7 +530,7 @@ export default function SettingsPage() {
           {active === "appearance" && (
             <>
               <div className="section-head">
-                <div className="section-tag">// APPEARANCE</div>
+                <div className="section-tag">APPEARANCE</div>
                 <div className="section-title">Customize UI</div>
               </div>
               <div className="card">
@@ -572,7 +572,7 @@ export default function SettingsPage() {
           {active === "editor" && (
             <>
               <div className="section-head">
-                <div className="section-tag">// CODE EDITOR</div>
+                <div className="section-tag">CODE EDITOR</div>
                 <div className="section-title">Editor Preferences</div>
               </div>
               <div className="card">
@@ -636,7 +636,7 @@ export default function SettingsPage() {
           {active === "notifications" && (
             <>
               <div className="section-head">
-                <div className="section-tag">// NOTIFICATIONS</div>
+                <div className="section-tag">NOTIFICATIONS</div>
                 <div className="section-title">Alert Settings</div>
               </div>
               <div className="card">
@@ -667,7 +667,7 @@ export default function SettingsPage() {
           {active === "privacy" && (
             <>
               <div className="section-head">
-                <div className="section-tag">// PRIVACY</div>
+                <div className="section-tag">PRIVACY</div>
                 <div className="section-title">Privacy Controls</div>
               </div>
               <div className="card">
@@ -698,7 +698,7 @@ export default function SettingsPage() {
           {active === "danger" && (
             <>
               <div className="section-head">
-                <div className="section-tag">// DANGER ZONE</div>
+                <div className="section-tag">DANGER ZONE</div>
                 <div className="section-title" style={{color:"#ef4444"}}>Danger Zone</div>
               </div>
               <div className="danger-card card">
