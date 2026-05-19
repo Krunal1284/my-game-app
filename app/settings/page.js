@@ -3,13 +3,13 @@
 import { useState } from "react";
 
 const NAV = [
-  { id: "profile",       icon: "◉", label: "Player Profile"    },
-  { id: "account",       icon: "⚙️", label: "Account & Security" },
-  { id: "appearance",    icon: "◈", label: "Appearance"         },
-  { id: "editor",        icon: "▸", label: "Code Editor"        },
-  { id: "notifications", icon: "⚡", label: "Notifications"     },
-  { id: "privacy",       icon: "◆", label: "Privacy"            },
-  { id: "danger",        icon: "△", label: "Danger Zone"        },
+  { id: "profile",       icon: "👤", label: "Player Profile"    },
+  { id: "account",       icon: "🔒", label: "Account & Security" },
+  { id: "appearance",    icon: "🎨", label: "Appearance"         },
+  { id: "editor",        icon: "💻", label: "Code Editor"        },
+  { id: "notifications", icon: "🔔", label: "Notifications"     },
+  { id: "privacy",       icon: "🛡️", label: "Privacy"            },
+  { id: "danger",        icon: "⚠️", label: "Danger Zone"        },
 ];
 
 export default function SettingsPage() {
@@ -389,7 +389,7 @@ export default function SettingsPage() {
       <div className="layout">
         {/* SIDEBAR */}
         <aside className="sidebar">
-          <div className="sidebar-title">// Settings</div>
+          <div className="sidebar-title">⚙️ Settings</div>
          {NAV.map((item, i) => (
   <div key={item.id}>
     {i === NAV.length - 1 && <div className="sidebar-divider" />}
