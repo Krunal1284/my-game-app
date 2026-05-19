@@ -4,7 +4,7 @@ import { useState } from "react";
 
 const NAV = [
   { id: "profile",       icon: "◉", label: "Player Profile"    },
-  { id: "account",       icon: "■", label: "Account & Security" },
+  { id: "account",       icon: "⚙️", label: "Account & Security" },
   { id: "appearance",    icon: "◈", label: "Appearance"         },
   { id: "editor",        icon: "▸", label: "Code Editor"        },
   { id: "notifications", icon: "⚡", label: "Notifications"     },

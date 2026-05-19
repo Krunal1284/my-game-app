@@ -298,7 +298,7 @@ export default function ArenaPage() {
           { icon: "◈", label: "Quests", link: "/problems" },
           { icon: "⚔", label: "Arena", link: "/arena" },
           { icon: "◆", label: "Board", link: "/leaderboard" },
-          { icon: "■", label: "Settings", link: "/settings" },
+         { icon: "⚙️", label: "Settings", link: "/settings" },
         ].map((item) => (
           <button key={item.label}
             onClick={() => window.location.href = item.link}
