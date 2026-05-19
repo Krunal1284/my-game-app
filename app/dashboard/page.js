@@ -157,13 +157,17 @@ export default function Dashboard() {
           pointer-events: none;
         }
 
-        .layout {
+        ..layout {
   position: relative;
   z-index: 1;
   min-height: 100vh;
   display: grid;
   grid-template-columns: 220px 1fr;
   grid-template-rows: auto 1fr;
+}
+
+.mobile-nav {
+  display: none;
 }
 
 @media (max-width: 768px) {
