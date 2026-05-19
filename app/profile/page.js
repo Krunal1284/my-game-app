@@ -126,7 +126,7 @@ useEffect(() => {
           background: radial-gradient(ellipse at 30% 0%, rgba(250,204,21,0.06) 0%, transparent 50%),
                       radial-gradient(ellipse at 70% 100%, rgba(234,88,12,0.04) 0%, transparent 50%);
         }
-        .page { position: relative; z-index: 1; min-height: 100vh; }
+        .page { position: relative; z-index: 1; min-height: 100vh; overflow-x: hidden; }
 
         /* TOPBAR */
         .topbar {
@@ -144,7 +144,7 @@ useEffect(() => {
         .avatar { width: 34px; height: 34px; background: linear-gradient(135deg, #facc15, #f59e0b); clip-path: polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #080810; cursor: pointer; font-family: 'Orbitron', monospace; }
 
         /* MAIN */
-        .main { max-width: 1100px; margin: 0 auto; padding: 36px 40px; }
+        .main { max-width: 1100px; margin: 0 auto; padding: 36px 40px; overflow-x: hidden; }
 
         /* PROFILE HERO */
         .profile-hero {
@@ -274,7 +274,7 @@ useEffect(() => {
         .breakdown-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
         .breakdown-label { font-family: 'Share Tech Mono', monospace; font-size: 10px; letter-spacing: 2px; }
         .breakdown-count { font-family: 'Orbitron', monospace; font-size: 11px; font-weight: 700; }
-        .breakdown-bar { height: 6px; background: rgba(255,255,255,0.05); overflow: hidden; clip-path: polygon(0 0,100% 0,100% 100%,3px 100%,0 calc(100% - 3px)); }
+        .breakdown-bar { height: 6px; background: rgba(255,255,255,0.05); overflow: hidden; }
         .breakdown-fill { height: 100%; transition: width 1.2s cubic-bezier(0.4,0,0.2,1); position: relative; }
         .breakdown-fill::after { content: ''; position: absolute; right: -10px; top: 0; width: 20px; height: 100%; background: linear-gradient(90deg,transparent,rgba(255,255,255,0.4),transparent); animation: shimmer 2s infinite; }
         @keyframes shimmer { 0%{transform:translateX(-20px)} 100%{transform:translateX(20px)} }
@@ -333,7 +333,7 @@ useEffect(() => {
         @media (max-width: 768px) {
   .topbar { padding: 0 16px; }
   .nav-links { display: none; }
-  .main { padding: 16px; }
+  .main { padding: 16px; overflow-x: hidden; }
   .profile-hero { display: flex; flex-direction: column; gap: 12px; padding: 20px 16px; clip-path: none; }
   .profile-right { display: none; }
   .profile-avatar { width: 64px; height: 64px; font-size: 20px; }
@@ -346,7 +346,13 @@ useEffect(() => {
   .tabs-row { overflow-x: auto; }
   .tab { padding: 10px 14px; font-size: 9px; white-space: nowrap; }
   .content-grid { grid-template-columns: 1fr; }
-  .content-right { order: -1; }
+  .content-right { order: -1; width: 100%; overflow: hidden; }
+  .content-left { width: 100%; overflow: hidden; }
+  .card { width: 100%; overflow: hidden; }
+  .breakdown-bar { max-width: 100%; overflow: hidden; }
+  .breakdown-fill { max-width: 100%; }
+  .rank-bar { max-width: 100%; overflow: hidden; }
+  .rank-fill { max-width: 100%; }
   .heatmap-wrap { overflow-x: auto; }
   .badges-grid { grid-template-columns: repeat(3, 1fr); }
 }
