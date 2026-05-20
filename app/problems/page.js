@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { supabase } from '@/lib/supabase';
 
 const PROBLEMS = [
   { id: 1,   title: "Two Sum",                    tag: ["Array","Hash Map"],          diff: "EASY",   xp: 120,  solved: true,  attempts: 4821, acceptance: 82 },
@@ -64,24 +65,44 @@ export default function ProblemsPage() {
   const [status, setStatus]   = useState("ALL");
   const [hovered, setHovered] = useState(null);
   const [loaded, setLoaded]   = useState(false);
+  const [problems, setProblems] = useState(PROBLEMS);
+
+useEffect(() => {
+  const fetchProblems = async () => {
+    const { data } = await supabase
+      .from('problems')
+      .select('*')
+      .order('id', { ascending: true });
+    if (data && data.length > 0) {
+      const mapped = data.map(p => ({
+        ...p,
+        diff: p.difficulty,
+        tag: p.tags,
+        solved: false,
+        attempts: 1000,
+      }));
+      setProblems(mapped);
+    }
+  };
+  fetchProblems();
+}, []);
 
   useEffect(() => { setTimeout(() => setLoaded(true), 100); }, []);
 
-  const filtered = PROBLEMS.filter((p) => {
-    const matchSearch = p.title.toLowerCase().includes(search.toLowerCase());
-    const matchDiff   = diff === "ALL" || p.diff === diff;
-    const matchTag    = tag === "All"  || p.tag.includes(tag);
-    const matchStatus = status === "ALL" || (status === "SOLVED" ? p.solved : !p.solved);
-    return matchSearch && matchDiff && matchTag && matchStatus;
-  });
+  const filtered = problems.filter((p) => {
+  const matchSearch = p.title.toLowerCase().includes(search.toLowerCase());
+  const matchDiff   = diff === "ALL" || p.diff === diff;
+  const matchTag    = tag === "All"  || p.tag.includes(tag);
+  const matchStatus = status === "ALL" || (status === "SOLVED" ? p.solved : !p.solved);
+  return matchSearch && matchDiff && matchTag && matchStatus;
+});
 
-  const diffColor = (d) => d === "EASY" ? "#22c55e" : d === "MEDIUM" ? "#f59e0b" : "#ef4444";
-  const diffBg    = (d) => d === "EASY" ? "rgba(34,197,94,0.08)" : d === "MEDIUM" ? "rgba(245,158,11,0.08)" : "rgba(239,68,68,0.08)";
+const totalSolved = problems.filter(p => p.solved).length;
+const easySolved = problems.filter(p => p.solved && p.diff === "EASY").length;
+const medSolved = problems.filter(p => p.solved && p.diff === "MEDIUM").length;
+const hardSolved = problems.filter(p => p.solved && p.diff === "HARD").length;
 
-  const totalSolved = PROBLEMS.filter(p => p.solved).length;
-  const easySolved  = PROBLEMS.filter(p => p.solved && p.diff === "EASY").length;
-  const medSolved   = PROBLEMS.filter(p => p.solved && p.diff === "MEDIUM").length;
-  const hardSolved  = PROBLEMS.filter(p => p.solved && p.diff === "HARD").length;
+const diffColor = (d) => d === "EASY" ? "#22c55e" : d === "MEDIUM" ? "#f59e0b" : "#ef4444";
 
   return (
     <>
@@ -421,7 +442,7 @@ export default function ProblemsPage() {
           {/* Stats */}
           <div className="stats-row">
             {[
-              { val: `${totalSolved}/${PROBLEMS.length}`, lbl: "Total Solved", fill: (totalSolved/PROBLEMS.length)*100, color: "#facc15" },
+              { val: `${totalSolved}/${problems.length}`, lbl: "Total Solved", fill: (totalSolved/problems.length)*100, color: "#facc15" },
               { val: `${easySolved}/3`,  lbl: "Easy Solved",   fill: (easySolved/3)*100,  color: "#22c55e" },
               { val: `${medSolved}/5`,   lbl: "Medium Solved", fill: (medSolved/5)*100,   color: "#f59e0b" },
               { val: `${hardSolved}/4`,  lbl: "Hard Solved",   fill: (hardSolved/4)*100,  color: "#ef4444" },
@@ -479,7 +500,7 @@ export default function ProblemsPage() {
           {/* Result count */}
           <div className="result-count">
             <div className="count-text">
-              Showing <span>{filtered.length}</span> of <span>{PROBLEMS.length}</span> quests
+              Showing <span>{filtered.length}</span> of <span>{problems.length}</span> quests
             </div>
             <button className="sort-btn">SORT BY XP ↓</button>
           </div>
