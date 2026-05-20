@@ -17,6 +17,10 @@ export default function ArenaPage() {
   const [rival, setRival] = useState(null);
   const [problem, setProblem] = useState(null);
   const [queueTime, setQueueTime] = useState(0);
+  const [battleMode, setBattleMode] = useState(null);
+  const [playerCode, setPlayerCode] = useState("");
+  const [battleTimer, setBattleTimer] = useState(600);
+  const lastTypedRef = useRef(Date.now());
 
   const matchChannelRef = useRef(null);
   const queueChannelRef = useRef(null);
@@ -464,8 +468,18 @@ export default function ArenaPage() {
             {arenaStatus === "idle" && !battleOutcome && (
               <div className="hero-panel">
                 <h1 className="arena-title">BATTLE ARENA</h1>
-                <p className="arena-desc">COMPETE HEAD-TO-HEAD IN REAL-TIME CODING DUELS. WIN TO CLIMB THE RANKS.</p>
-                <button className="queue-btn" onClick={handleFindMatch}>FIND MATCH ⚔️</button>
+                <p className="arena-desc">CHOOSE YOUR BATTLE MODE</p>
+<div style={{display:"flex", gap:"16px", justifyContent:"center", flexWrap:"wrap", marginTop:"10px"}}>
+  <button className="queue-btn" onClick={() => { setBattleMode("bugfix"); handleFindMatch(); }}>
+    🐛 BUG FIX BATTLE
+  </button>
+  <button className="queue-btn" style={{background:"linear-gradient(135deg,#6366f1,#4338ca)", boxShadow:"0 0 20px rgba(99,102,241,0.4)"}}>
+    💻 CODING BATTLE
+  </button>
+</div>
+<p style={{fontFamily:"Share Tech Mono", fontSize:10, color:"rgba(255,255,255,0.2)", marginTop:"16px", letterSpacing:2}}>
+  CODING BATTLE — COMING SOON
+</p>
               </div>
             )}
 
