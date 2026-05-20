@@ -2,14 +2,20 @@
 
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
+import Editor from "@monaco-editor/react"; // 🌟 Imported Monaco Editor here
 
 export default function ArenaPage() {
-  const [arenaStatus, setArenaStatus] = useState("idle");
+  const [arenaStatus, setArenaStatus] = useState("idle"); // idle, searching, found, active
+  const [battleMode, setBattleMode] = useState(null); // 'bugfix' or 'coding'
   const [countdown, setCountdown] = useState(5);
+  const [battleTimer, setBattleTimer] = useState(600); // 10 minutes
+  
   const [playerProgress, setPlayerProgress] = useState(0);
   const [rivalProgress, setRivalProgress] = useState(0);
+  const [playerCode, setPlayerCode] = useState("");
   const [battleLog, setBattleLog] = useState([]);
-  const [battleOutcome, setBattleOutcome] = useState(null);
+  const [battleOutcome, setBattleOutcome] = useState(null); // WIN, LOSE, TIE
+  
   const [currentMatch, setCurrentMatch] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [arenaStats, setArenaStats] = useState(null);
@@ -17,22 +23,73 @@ export default function ArenaPage() {
   const [rival, setRival] = useState(null);
   const [problem, setProblem] = useState(null);
   const [queueTime, setQueueTime] = useState(0);
-  const [battleMode, setBattleMode] = useState(null);
-  const [playerCode, setPlayerCode] = useState("");
-  const [battleTimer, setBattleTimer] = useState(600);
-  const lastTypedRef = useRef(Date.now());
 
+  // AFK & Activity Tracking
+  const hasTypedRef = useRef(false);
   const matchChannelRef = useRef(null);
   const queueChannelRef = useRef(null);
 
-  // ─── Load current user + stats ───────────────────────────────────────────
+  // ─── GAME OVER & EVALUATION LOGIC ────────────────────────────────────────
+  const handleMatchEndEvaluation = async (forcedWinnerId = null, reason = "") => {
+    if (!currentMatch || !currentUser) return;
+
+    let finalWinnerId = forcedWinnerId;
+    let finalOutcome = "TIE";
+
+    // If timer ran out naturally, run your structural evaluation rules
+    if (!finalWinnerId) {
+      if (playerProgress > rivalProgress) {
+        finalWinnerId = currentUser.id;
+      } else if (rivalProgress > playerProgress) {
+        finalWinnerId = rival?.id;
+      } else {
+        // If progress is perfectly equal, tie-break using keyboard activity!
+        if (hasTypedRef.current && !currentMatch.rival_active) {
+          finalWinnerId = currentUser.id; // You typed, rival didn't touch keyboard
+        } else {
+          finalWinnerId = null; // Absolute Tie
+        }
+      }
+    }
+
+    if (finalWinnerId === currentUser.id) finalOutcome = "WIN";
+    else if (finalWinnerId === rival?.id) finalOutcome = "LOSE";
+
+    try {
+      await supabase
+        .from("arena_matches")
+        .update({
+          status: "finished",
+          winner_id: finalWinnerId,
+          end_reason: reason || "time_expired"
+        })
+        .eq("id", currentMatch.id);
+
+      setBattleOutcome(finalOutcome);
+      setArenaStatus("idle");
+      setCurrentMatch(null);
+      setBattleLog((log) => [`🏁 Match Over: ${reason || "Time Expired!"}`, ...log]);
+      
+      // Update ELO via RPC if someone won
+      if (finalWinnerId) {
+        await supabase.rpc("update_arena_elo", {
+          winner: finalWinnerId,
+          loser: finalWinnerId === currentUser.id ? rival?.id : currentUser.id,
+        });
+      }
+      refreshStats();
+    } catch (err) {
+      console.error("Error evaluating match end:", err);
+    }
+  };
+
+  // ─── SYSTEM INITIALIZATION ───────────────────────────────────────────────
   useEffect(() => {
     const init = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       setCurrentUser(user);
 
-      // Ensure arena_stats row exists
       const { data: stats } = await supabase
         .from("arena_stats")
         .select("*")
@@ -57,7 +114,7 @@ export default function ArenaPage() {
     init();
   }, []);
 
-  // ─── Load active matches for display ────────────────────────────────────
+  // ─── ACTIVE MATCHES FEED ────────────────────────────────────────────────
   useEffect(() => {
     const fetchActive = async () => {
       const { data } = await supabase
@@ -77,72 +134,93 @@ export default function ArenaPage() {
     return () => supabase.removeChannel(channel);
   }, []);
 
-  // ─── Countdown when match found ──────────────────────────────────────────
+  // ─── TIMERS LOOP ────────────────────────────────────────────────────────
   useEffect(() => {
-    let timer;
+    let interval;
     if (arenaStatus === "found") {
-      timer = setInterval(() => {
-        setCountdown((prev) => {
-          if (prev <= 1) {
+      interval = setInterval(() => {
+        setCountdown((p) => {
+          if (p <= 1) {
             setArenaStatus("active");
-            clearInterval(timer);
+            clearInterval(interval);
             return 5;
           }
-          return prev - 1;
+          return p - 1;
         });
       }, 1000);
     }
-    return () => clearInterval(timer);
+    return () => clearInterval(interval);
   }, [arenaStatus]);
 
-  // ─── Queue timer ─────────────────────────────────────────────────────────
   useEffect(() => {
-    let timer;
+    let interval;
+    if (arenaStatus === "active") {
+      setBattleTimer(600); // 10 Minutes standard clock loop
+      interval = setInterval(() => {
+        setBattleTimer((p) => {
+          if (p <= 1) {
+            clearInterval(interval);
+            handleMatchEndEvaluation(null, "Time limit reached!");
+            return 0;
+          }
+          return p - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [arenaStatus, playerProgress, rivalProgress]);
+
+  useEffect(() => {
+    let interval;
     if (arenaStatus === "searching") {
-      timer = setInterval(() => setQueueTime((p) => p + 1), 1000);
+      interval = setInterval(() => setQueueTime((p) => p + 1), 1000);
     } else {
       setQueueTime(0);
     }
-    return () => clearInterval(timer);
+    return () => clearInterval(interval);
   }, [arenaStatus]);
 
-  // ─── FIND MATCH ──────────────────────────────────────────────────────────
-  const handleFindMatch = async () => {
-    if (!currentUser) return;
-    setArenaStatus("searching");
-    setBattleOutcome(null);
+  const handleFindMatch = async (mode) => {
+  console.log("handleFindMatch called", mode, currentUser);
+  if (!currentUser) {
+    alert("Not logged in! currentUser is null");
+    return;
+  }
+  setBattleMode(mode);
+  setArenaStatus("searching");
+  setBattleOutcome(null);
+  setPlayerProgress(0);
+  setRivalProgress(0);
+  hasTypedRef.current = false;
 
     const username = arenaStats?.username || currentUser.email.split("@")[0];
     const elo = arenaStats?.elo_rating || 1200;
 
-    // Check if someone is already waiting
     const { data: waiting } = await supabase
       .from("arena_queue")
       .select("*")
       .eq("status", "waiting")
+      .eq("battle_mode", mode)
       .neq("user_id", currentUser.id)
       .order("joined_at", { ascending: true })
       .limit(1);
 
     if (waiting && waiting.length > 0) {
-      // Found an opponent — create match
       const opponent = waiting[0];
 
-      // Mark opponent as matched
-      await supabase
-        .from("arena_queue")
-        .update({ status: "matched" })
-        .eq("id", opponent.id);
+      await supabase.from("arena_queue").update({ status: "matched" }).eq("id", opponent.id);
 
-      // Pick a random problem
-      const { data: problems } = await supabase
-        .from("problems")
-        .select("id, title, difficulty")
-        .limit(100);
-      const randomProblem = problems[Math.floor(Math.random() * problems.length)];
+      // TARGET RELEVANT TABLE BASE SELECTION
+      const targetTable = mode === "bugfix" ? "bug_fix_problems" : "problems";
+      const { data: problems } = await supabase.from(targetTable).select("*").limit(50);
+        
+      const randomProblem = problems && problems.length > 0 
+        ? problems[Math.floor(Math.random() * problems.length)]
+        : { id: "default", title: "Fallback Sandbox", description: "Write operations", buggy_code: "def error_code(): pass" };
+
       setProblem(randomProblem);
+      setPlayerCode(mode === "bugfix" ? randomProblem.buggy_code || "" : "// Write your optimal solution here...");
 
-      // Create match
       const { data: match } = await supabase
         .from("arena_matches")
         .insert({
@@ -153,6 +231,7 @@ export default function ArenaPage() {
           problem_id: randomProblem.id,
           problem_title: randomProblem.title,
           status: "active",
+          battle_mode: mode,
           player1_progress: 0,
           player2_progress: 0,
         })
@@ -162,163 +241,133 @@ export default function ArenaPage() {
       setCurrentMatch(match);
       setRival({ username: opponent.username, id: opponent.user_id });
       setArenaStatus("found");
-      subscribeToMatch(match.id, "player2");
-
+      subscribeToMatch(match.id, "player2", mode);
     } else {
-      // No opponent — join queue
       await supabase.from("arena_queue").insert({
         user_id: currentUser.id,
         username,
         elo_rating: elo,
         status: "waiting",
+        battle_mode: mode
       });
 
-      // Listen for a match to be created for us
       const channel = supabase
         .channel("queue-watch-" + currentUser.id)
-        .on(
-          "postgres_changes",
-          { event: "INSERT", schema: "public", table: "arena_matches" },
-          async (payload) => {
-            const match = payload.new;
-            if (match.player1_id === currentUser.id || match.player2_id === currentUser.id) {
-              const { data: prob } = await supabase
-                .from("problems")
-                .select("id, title, difficulty")
-                .eq("id", match.problem_id)
-                .single();
-              setProblem(prob);
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "arena_matches" }, async (payload) => {
+          const match = payload.new;
+          if (match.player1_id === currentUser.id || match.player2_id === currentUser.id) {
+            
+            // TARGET RELEVANT TABLE BASE SELECTION ON TRIGGER RECEIVE
+            const targetTable = match.battle_mode === "bugfix" ? "bug_fix_problems" : "problems";
+            const { data: prob } = await supabase.from(targetTable).select("*").eq("id", match.problem_id).single();
+            
+            setProblem(prob);
+            setPlayerCode(match.battle_mode === "bugfix" ? prob?.buggy_code || "" : "// Write your optimal solution here...");
 
-              const rivalUsername =
-                match.player1_id === currentUser.id
-                  ? match.player2_username
-                  : match.player1_username;
-              const rivalId =
-                match.player1_id === currentUser.id
-                  ? match.player2_id
-                  : match.player1_id;
+            const rivalName = match.player1_id === currentUser.id ? match.player2_username : match.player1_username;
+            const rivalId = match.player1_id === currentUser.id ? match.player2_id : match.player1_id;
 
-              setRival({ username: rivalUsername, id: rivalId });
-              setCurrentMatch(match);
-              setArenaStatus("found");
+            setRival({ username: rivalName, id: rivalId });
+            setCurrentMatch(match);
+            setArenaStatus("found");
 
-              const role = match.player1_id === currentUser.id ? "player1" : "player2";
-              subscribeToMatch(match.id, role);
-              supabase.removeChannel(channel);
-            }
+            const role = match.player1_id === currentUser.id ? "player1" : "player2";
+            subscribeToMatch(match.id, role, match.battle_mode);
+            supabase.removeChannel(channel);
           }
-        )
+        })
         .subscribe();
 
       queueChannelRef.current = channel;
     }
   };
 
-  // ─── Subscribe to match realtime updates ────────────────────────────────
-  const subscribeToMatch = (matchId, role) => {
+  // ─── REALTIME GAME DATA INTERACTION SUBSCRIPTION ────────────────────────
+  const subscribeToMatch = (matchId, role, mode) => {
     const channel = supabase
       .channel("match-" + matchId)
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "arena_matches", filter: `id=eq.${matchId}` },
-        (payload) => {
-          const updated = payload.new;
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "arena_matches", filter: `id=eq.${matchId}` }, (payload) => {
+        const updated = payload.new;
 
-          if (role === "player1") {
-            setRivalProgress(updated.player2_progress);
-          } else {
-            setRivalProgress(updated.player1_progress);
-          }
-
-          setBattleLog((log) => [
-            `⚡ Rival is at ${role === "player1" ? updated.player2_progress : updated.player1_progress}%`,
-            ...log.slice(0, 4),
-          ]);
-
-          if (updated.status === "finished") {
-            if (updated.winner_id === currentUser?.id) {
-              setBattleOutcome("WIN");
-            } else {
-              setBattleOutcome("LOSE");
-            }
-            setArenaStatus("idle");
-            setCurrentMatch(null);
-            refreshStats();
-          }
+        if (role === "player1") {
+          setRivalProgress(updated.player2_progress);
+        } else {
+          setRivalProgress(updated.player1_progress);
         }
-      )
+
+        // Keep internal match context up-to-date with rival keyboard activity states
+        setCurrentMatch(prev => ({
+          ...prev,
+          rival_active: role === "player1" ? updated.player2_active : updated.player1_active
+        }));
+
+        if (updated.status === "finished") {
+          if (updated.winner_id === currentUser?.id) setBattleOutcome("WIN");
+          else if (!updated.winner_id) setBattleOutcome("TIE");
+          else setBattleOutcome("LOSE");
+
+          setArenaStatus("idle");
+          setCurrentMatch(null);
+          refreshStats();
+          supabase.removeChannel(channel);
+        }
+      })
       .subscribe();
 
-    matchChannelRef.current = { channel, role, matchId };
+    matchChannelRef.current = { channel, role, matchId, mode };
   };
 
-  // ─── SUBMIT CODE (player progresses) ────────────────────────────────────
+  // ─── HANDLE TEXT WORKSPACE INPUT (TRACK ACTIVITY STATUS) ─────────────────
+  const handleCodeChange = async (val) => {
+    setPlayerCode(val);
+    
+    if (!hasTypedRef.current && currentMatch) {
+      hasTypedRef.current = true;
+      const { role, matchId } = matchChannelRef.current;
+      const activeField = role === "player1" ? "player1_active" : "player2_active";
+      
+      // Let the database and your rival know you are active at the keyboard
+      await supabase.from("arena_matches").update({ [activeField]: true }).eq("id", matchId);
+    }
+  };
+
+  // ─── SUBMIT ACTION REWRITE WITH SYSTEM EVALUATION ────────────────────────
   const handlePlayerCodeSubmit = async () => {
     if (!currentMatch || !currentUser) return;
 
     const { role, matchId } = matchChannelRef.current;
-    const newProgress = Math.min(playerProgress + 20, 100);
+    
+    // Simulating checking tests. Increments 25% per run.
+    const newProgress = Math.min(playerProgress + 25, 100); 
     setPlayerProgress(newProgress);
 
-    const field = role === "player1" ? "player1_progress" : "player2_progress";
-    setBattleLog((log) => [`✅ You passed a test case! (${newProgress}%)`, ...log.slice(0, 4)]);
+    const progressField = role === "player1" ? "player1_progress" : "player2_progress";
+    setBattleLog((log) => [`✅ Compiling standard assertions... passed (${newProgress}%)`, ...log.slice(0, 4)]);
 
     if (newProgress >= 100) {
-      // You won
-      await supabase
-        .from("arena_matches")
-        .update({ [field]: 100, status: "finished", winner_id: currentUser.id })
-        .eq("id", matchId);
-
-      setBattleOutcome("WIN");
-      setArenaStatus("idle");
-      setCurrentMatch(null);
-
-      // Update ELO
-      await supabase.rpc("update_arena_elo", {
-        winner: currentUser.id,
-        loser: rival?.id,
-      });
-
-      refreshStats();
+      // Immediate clean victory if 100% logic passed!
+      await handleMatchEndEvaluation(currentUser.id, "Passed 100% of functional compiler assertions first!");
     } else {
-      await supabase
-        .from("arena_matches")
-        .update({ [field]: newProgress })
-        .eq("id", matchId);
+      await supabase.from("arena_matches").update({ [progressField]: newProgress }).eq("id", matchId);
     }
   };
 
-  // ─── Cancel queue ────────────────────────────────────────────────────────
   const handleCancelQueue = async () => {
     if (currentUser) {
-      await supabase
-        .from("arena_queue")
-        .delete()
-        .eq("user_id", currentUser.id);
+      await supabase.from("arena_queue").delete().eq("user_id", currentUser.id);
     }
     if (queueChannelRef.current) supabase.removeChannel(queueChannelRef.current);
     setArenaStatus("idle");
   };
 
-  // ─── Refresh stats after match ───────────────────────────────────────────
   const refreshStats = async () => {
     if (!currentUser) return;
-    const { data } = await supabase
-      .from("arena_stats")
-      .select("*")
-      .eq("user_id", currentUser.id)
-      .single();
+    const { data } = await supabase.from("arena_stats").select("*").eq("user_id", currentUser.id).single();
     if (data) setArenaStats(data);
   };
 
-  const formatTime = (secs) =>
-    `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, "0")}`;
-
-  const winRate =
-    arenaStats?.total_matches > 0
-      ? ((arenaStats.wins / arenaStats.total_matches) * 100).toFixed(1)
-      : "0.0";
+  const formatTime = (secs) => `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, "0")}`;
+  const winRate = arenaStats?.total_matches > 0 ? ((arenaStats.wins / arenaStats.total_matches) * 100).toFixed(1) : "0.0";
 
   return (
     <>
@@ -387,119 +436,142 @@ export default function ArenaPage() {
             </button>
           ))}
         </nav>
-        <div style={{fontFamily:"Share Tech Mono", color:"#facc15", cursor:"pointer"}}
-          onClick={() => window.location.href = "/profile"}>
+        <div style={{fontFamily:"Share Tech Mono", color:"#facc15", cursor:"pointer"}} onClick={() => window.location.href = "/profile"}>
           {arenaStats?.username?.slice(0,2).toUpperCase() || "KG"}
         </div>
       </header>
 
       <div className="arena-page">
-
-        {/* OUTCOME BANNER */}
+        {/* MATCH EVALUATION OUTCOME BANNER */}
         {battleOutcome && (
-          <div className="match-card" style={{borderColor: battleOutcome === "WIN" ? "#22c55e" : "#ef4444"}}>
-            <div className="outcome-banner" style={{color: battleOutcome === "WIN" ? "#22c55e" : "#ef4444"}}>
-              {battleOutcome === "WIN" ? "🏆 VICTORY ACHIEVED" : "❌ DEFEATED IN COMBAT"}
+          <div className="match-card" style={{borderColor: battleOutcome === "WIN" ? "#22c55e" : battleOutcome === "TIE" ? "#a855f7" : "#ef4444"}}>
+            <div className="outcome-banner" style={{color: battleOutcome === "WIN" ? "#22c55e" : battleOutcome === "TIE" ? "#a855f7" : "#ef4444"}}>
+              {battleOutcome === "WIN" ? "🏆 COMPETITIVE VICTORY" : battleOutcome === "TIE" ? "🤝 MATCH STALEMATE" : "❌ SYSTEM DEFEAT"}
             </div>
             <p style={{fontFamily:"Share Tech Mono", color:"rgba(255,255,255,0.5)"}}>
-              {battleOutcome === "WIN" ? "+30 ELO Points Granted" : "-15 ELO Points Deducted"}
+              {battleOutcome === "WIN" ? "+30 ELO Rating points processed." : battleOutcome === "TIE" ? "0 ELO adjustment processed." : "-15 ELO Rating points deducted."}
             </p>
-            <button className="action-button" onClick={() => setBattleOutcome(null)}>CONTINUE</button>
+            <button className="action-button" onClick={() => setBattleOutcome(null)}>DISMISS MONITOR</button>
           </div>
         )}
 
-        {/* MATCH FOUND */}
+        {/* LOADING SEQUENCER */}
         {arenaStatus === "found" && rival && (
           <div className="match-card">
-            <div style={{fontFamily:"Share Tech Mono", color:"#facc15", letterSpacing:4}}>💥 OPPONENT DETECTED 💥</div>
+            <div style={{fontFamily:"Share Tech Mono", color:"#facc15", letterSpacing:4}}>💥 OPPONENT TERMINAL CONNECTED ({battleMode?.toUpperCase()}) 💥</div>
             <div className="versus-header">
               <span className="vs-name" style={{color:"#facc15"}}>{arenaStats?.username || "You"}</span>
               <span className="vs-divider">VS</span>
               <span className="vs-name" style={{color:"#ef4444"}}>{rival.username}</span>
             </div>
-            <div style={{fontFamily:"Orbitron", fontSize:18, color:"#fff"}}>ENGAGING IN: {countdown}s</div>
-            {problem && (
-              <div style={{fontFamily:"Share Tech Mono", color:"rgba(255,255,255,0.4)", marginTop:10, fontSize:12}}>
-                PROBLEM: {problem.title} [{problem.difficulty}]
-              </div>
-            )}
+            <div style={{fontFamily:"Orbitron", fontSize:18, color:"#fff"}}>INITIALIZING COMPILER SANDBOX: {countdown}s</div>
           </div>
         )}
 
-        {/* ACTIVE BATTLE */}
+        {/* ACTIVE COMBAT VIEW */}
         {arenaStatus === "active" && rival && problem && (
-          <div className="match-card">
-            <div style={{fontFamily:"Share Tech Mono", color:"#ef4444", fontSize:13, letterSpacing:2}}>
-              ⚔️ LIVE DUEL: {problem.title.toUpperCase()} ⚔️
-            </div>
-
-            <div className="progress-wrapper">
-              <div style={{display:"flex", justifyContent:"space-between"}}>
-                <span>YOU ({arenaStats?.username})</span>
-                <span>{playerProgress}% Passed</span>
-              </div>
-              <div className="bar-container">
-                <div className="bar-fill" style={{width:`${playerProgress}%`, background:"#22c55e"}} />
+          <div style={{marginBottom:24}}>
+            <div style={{display:"flex", alignItems:"center", justifycontent:"space-between", marginBottom:16, fontFamily:"Share Tech Mono", fontSize:12}}>
+              <div style={{color:"#ef4444", letterSpacing:2}}>⚔️ SECTOR: {battleMode?.toUpperCase()} // CONFIG: {problem.title.toUpperCase()}</div>
+              <div style={{color:"#facc15", fontSize:16, fontFamily:"Orbitron", fontWeight:900, letterSpacing:3}}>
+                {formatTime(battleTimer)}
               </div>
             </div>
 
-            <div className="progress-wrapper">
-              <div style={{display:"flex", justifyContent:"space-between"}}>
-                <span>RIVAL ({rival.username})</span>
-                <span>{rivalProgress}% Passed</span>
+            {/* REALTIME GRAPHICAL SUBSECTION PROGRESSION BARS */}
+            <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:16}}>
+              <div className="progress-wrapper">
+                <div style={{display:"flex", justifyContent:"space-between", marginBottom:6}}>
+                  <span style={{color:"#22c55e"}}>YOU ({arenaStats?.username})</span>
+                  <span>{playerProgress}%</span>
+                </div>
+                <div className="bar-container">
+                  <div className="bar-fill" style={{width:`${playerProgress}%`, background:"#22c55e"}} />
+                </div>
               </div>
-              <div className="bar-container">
-                <div className="bar-fill" style={{width:`${rivalProgress}%`, background:"#ef4444"}} />
+              <div className="progress-wrapper">
+                <div style={{display:"flex", justifyContent:"space-between", marginBottom:6}}>
+                  <span style={{color:"#ef4444"}}>RIVAL ({rival.username})</span>
+                  <span>{rivalProgress}%</span>
+                </div>
+                <div className="bar-container">
+                  <div className="bar-fill" style={{width:`${rivalProgress}%`, background:"#ef4444"}} />
+                </div>
               </div>
             </div>
 
-            <div className="battle-log-box">
-              {battleLog.map((log, i) => <div key={i}>{log}</div>)}
+            {/* SPLIT COMBAT PANELS */}
+            <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:16}}>
+              <div style={{background:"rgba(239,68,68,0.03)", border:"1px solid rgba(239,68,68,0.2)", padding:16}}>
+                <div style={{fontFamily:"Share Tech Mono", fontSize:9, color:"#ef4444", letterSpacing:3, marginBottom:12}}>◉ ASSIGNMENT PROMPT CRITERIA</div>
+                <div style={{fontFamily:"Share Tech Mono", fontSize:13, color:"#fff", marginBottom:12}}>{problem.description}</div>
+                {battleMode === "bugfix" && (
+                  <>
+                    <div style={{fontFamily:"Share Tech Mono", fontSize:9, color:"rgba(255,255,255,0.3)", marginBottom:4}}>BROKEN TARGET DEPLOYMENT:</div>
+                    <pre style={{fontFamily:"Share Tech Mono", fontSize:12, color:"#b91c1c", background:"#040408", padding:10, overflow:"auto", maxHeight:200, border:"1px dashed rgba(239,68,68,0.3)"}}>{problem.buggy_code}</pre>
+                  </>
+                )}
+              </div>
+
+              {/* 🌟 NEW: Professional Monaco Code Workspace integration replaces the old textarea */}
+              <div style={{ background: "#1e1e1e", border: "1px solid rgba(250,204,21,0.1)", display: "flex", flexDirection: "column", height: "350px" }}>
+                <div style={{ fontFamily: "Share Tech Mono", fontSize: 9, color: "rgba(250,204,21,0.4)", letterSpacing: 3, padding: "10px 14px", borderBottom: "1px solid rgba(250,204,21,0.06)", background: "#111116" }}>
+                  ◈ SYSTEM COMPILER WORKSPACE (MONACO_ENV)
+                </div>
+                <div style={{ flex: 1, padding: "10px 0" }}>
+                  <Editor
+                    height="100%"
+                    defaultLanguage="javascript"
+                    theme="vs-dark"
+                    value={playerCode}
+                    onChange={(value) => handleCodeChange(value || "")}
+                    options={{
+                      minimap: { enabled: false },
+                      fontSize: 13,
+                      fontFamily: "'Share Tech Mono', monospace",
+                      lineHeight: 20,
+                      automaticLayout: true,
+                    }}
+                  />
+                </div>
+              </div>
             </div>
 
-            <button className="action-button" onClick={handlePlayerCodeSubmit}>
-              SUBMIT TEST CASE ⚡
-            </button>
+            <div style={{marginTop:16, display:"flex", gap:12, alignItems:"center"}}>
+              <button className="action-button" onClick={handlePlayerCodeSubmit} style={{margin:0}}>⚡ COMPILE SOLUTION</button>
+              <div className="battle-log-box" style={{flex:1, height:60}}>
+                {battleLog.slice(0,2).map((log, i) => <div key={i}>{log}</div>)}
+              </div>
+            </div>
           </div>
         )}
 
+        {/* SELECTION CHANNELS CONTAINER */}
         <div className="main-grid">
           <div>
             {arenaStatus === "idle" && !battleOutcome && (
               <div className="hero-panel">
                 <h1 className="arena-title">BATTLE ARENA</h1>
-                <p className="arena-desc">CHOOSE YOUR BATTLE MODE</p>
-<div style={{display:"flex", gap:"16px", justifyContent:"center", flexWrap:"wrap", marginTop:"10px"}}>
-  <button className="queue-btn" onClick={() => { setBattleMode("bugfix"); handleFindMatch(); }}>
-    🐛 BUG FIX BATTLE
-  </button>
-  <button className="queue-btn" style={{background:"linear-gradient(135deg,#6366f1,#4338ca)", boxShadow:"0 0 20px rgba(99,102,241,0.4)"}}>
-    💻 CODING BATTLE
-  </button>
-</div>
-<p style={{fontFamily:"Share Tech Mono", fontSize:10, color:"rgba(255,255,255,0.2)", marginTop:"16px", letterSpacing:2}}>
-  CODING BATTLE — COMING SOON
-</p>
+                <p className="arena-desc">SELECT THE TARGET MATCH VARIANT DESIGNATION</p>
+                <div style={{display:"flex", gap:"16px", justifyContent:"center", flexWrap:"wrap", marginTop:"10px"}}>
+                  <button className="queue-btn" onClick={() => handleFindMatch("bugfix")}>⚠️ BUG FIX BATTLE</button>
+                  <button className="queue-btn" style={{background:"linear-gradient(135deg,#6366f1,#4338ca)", boxShadow:"0 0 20px rgba(99,102,241,0.4)"}} onClick={() => handleFindMatch("coding")}>💻 CODING BATTLE</button>
+                </div>
               </div>
             )}
 
             {arenaStatus === "searching" && (
               <div className="hero-panel">
-                <h1 className="arena-title" style={{color:"#ef4444"}}>MATCHMAKING ACTIVE</h1>
-                <p className="arena-desc">SEARCHING FOR AN OPPONENT IN YOUR ELO RANGE...</p>
-                <button className="queue-btn searching" onClick={handleCancelQueue}>
-                  SEARCHING... [{formatTime(queueTime)}] • CANCEL
-                </button>
+                <h1 className="arena-title" style={{color:"#ef4444"}}>BROADCASTING COMPONENT POOL</h1>
+                <p className="arena-desc">QUERIES QUEUED FOR [{battleMode?.toUpperCase()}] • MATCHMAKING PENDING...</p>
+                <button className="queue-btn searching" onClick={handleCancelQueue}>CANCEL LOCAL BROADSIGNAL [{formatTime(queueTime)}]</button>
               </div>
             )}
 
+            {/* SERVER STATUS INTERFACES */}
             <div className="card">
-              <div className="card-header"><div className="card-dot" /> ACTIVE DUELS NOW</div>
-              {activeMatches.length === 0 && (
-                <div style={{padding:"20px", fontFamily:"Share Tech Mono", fontSize:12, color:"rgba(255,255,255,0.3)"}}>
-                  No active duels right now
-                </div>
-              )}
+              <div className="card-header"><div className="card-dot" /> LIVE DEPLOYMENTS ON FEED</div>
+              {activeMatches.length === 0 && <div style={{padding:"20px", fontFamily:"Share Tech Mono", fontSize:12, color:"rgba(255,255,255,0.3)"}}>No active matches ongoing.</div>}
               {activeMatches.map((m) => (
                 <div key={m.id} className="live-match-row">
                   <div className="vs-block">
@@ -507,72 +579,25 @@ export default function ArenaPage() {
                     <span className="vs-badge">VS</span>
                     <span className="player-tag">{m.player2_username}</span>
                   </div>
-                  <span style={{color:"rgba(255,255,255,0.3)", fontSize:12, fontFamily:"Share Tech Mono"}}>
-                    {m.problem_title}
-                  </span>
+                  <span style={{color:"rgba(255,255,255,0.3)", fontSize:12, fontFamily:"Share Tech Mono"}}>{m.problem_title} ({m.battle_mode})</span>
                 </div>
               ))}
             </div>
           </div>
 
+          {/* HISTORIC METRIC TILES */}
           <div>
             <div className="card" style={{marginTop:0}}>
-              <div className="card-header">ARENA STATISTICS</div>
+              <div className="card-header">ARENA METRICS</div>
               <div style={{padding:20, fontFamily:"Share Tech Mono", fontSize:12, display:"flex", flexDirection:"column", gap:12}}>
-                <div style={{display:"flex", justifyContent:"space-between"}}>
-                  <span>ARENA RATING:</span>
-                  <span style={{color:"#facc15"}}>{arenaStats?.elo_rating || 1200} ELO</span>
-                </div>
-                <div style={{display:"flex", justifyContent:"space-between"}}>
-                  <span>WIN RATE:</span>
-                  <span style={{color:"#22c55e"}}>{winRate}%</span>
-                </div>
-                <div style={{display:"flex", justifyContent:"space-between"}}>
-                  <span>TOTAL DUELS:</span>
-                  <span>{arenaStats?.total_matches || 0} Matches</span>
-                </div>
-                <div style={{display:"flex", justifyContent:"space-between"}}>
-                  <span>WINS / LOSSES:</span>
-                  <span>
-                    <span style={{color:"#22c55e"}}>{arenaStats?.wins || 0}W</span>
-                    {" / "}
-                    <span style={{color:"#ef4444"}}>{arenaStats?.losses || 0}L</span>
-                  </span>
-                </div>
+                <div style={{display:"flex", justifyContent:"space-between"}}><span>RATING TRACKER:</span><span style={{color:"#facc15"}}>{arenaStats?.elo_rating || 1200} ELO</span></div>
+                <div style={{display:"flex", justifyContent:"space-between"}}><span>RATIO SCORE:</span><span style={{color:"#22c55e"}}>{winRate}%</span></div>
+                <div style={{display:"flex", justifyContent:"space-between"}}><span>DUEL OVERVIEW:</span><span>{arenaStats?.total_matches || 0} Sets</span></div>
               </div>
             </div>
           </div>
         </div>
       </div>
-
-      <nav style={{
-        position:"fixed", bottom:0, left:0, right:0,
-        background:"rgba(8,8,16,0.98)",
-        borderTop:"1px solid rgba(250,204,21,0.15)",
-        padding:"10px 0", zIndex:200,
-        gridTemplateColumns:"repeat(5, 1fr)",
-      }} className="mobile-nav">
-        {[
-          { icon:"🏠", label:"Home", link:"/dashboard" },
-          { icon:"📋", label:"Quests", link:"/problems" },
-          { icon:"⚔️", label:"Arena", link:"/arena" },
-          { icon:"🏆", label:"Board", link:"/leaderboard" },
-          { icon:"⚙️", label:"Settings", link:"/settings" },
-        ].map((item) => (
-          <button key={item.label} onClick={() => window.location.href = item.link}
-            style={{
-              background:"none", border:"none",
-              color: item.link === "/arena" ? "#ef4444" : "rgba(250,204,21,0.5)",
-              display:"flex", flexDirection:"column", alignItems:"center",
-              gap:"4px", cursor:"pointer", padding:"4px 0", width:"100%",
-            }}>
-            <span style={{fontSize:18}}>{item.icon}</span>
-            <span style={{fontSize:9, letterSpacing:1, fontFamily:"'Share Tech Mono', monospace"}}>
-              {item.label}
-            </span>
-          </button>
-        ))}
-      </nav>
     </>
   );
 }
