@@ -136,21 +136,22 @@ export default function ArenaPage() {
 
   // ─── TIMERS LOOP ────────────────────────────────────────────────────────
   useEffect(() => {
-    let interval;
-    if (arenaStatus === "found") {
-      interval = setInterval(() => {
-        setCountdown((p) => {
-          if (p <= 1) {
-            setArenaStatus("active");
-            clearInterval(interval);
-            return 5;
-          }
-          return p - 1;
-        });
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [arenaStatus]);
+  let interval;
+  if (arenaStatus === "found") {
+    setCountdown(5);
+    interval = setInterval(() => {
+      setCountdown((p) => {
+        if (p <= 1) {
+          clearInterval(interval);
+          setArenaStatus("active");
+          return 0;
+        }
+        return p - 1;
+      });
+    }, 1000);
+  }
+  return () => clearInterval(interval);
+}, [arenaStatus]);
 
   useEffect(() => {
     let interval;
@@ -408,6 +409,11 @@ export default function ArenaPage() {
         .action-button:hover { background: #eab308; }
         .outcome-banner { font-family: 'Orbitron'; font-size: 28px; font-weight: 900; padding: 10px; margin-bottom: 20px; letter-spacing: 2px; }
         .mobile-nav { display: none; }
+        @keyframes pulse {
+  0%,100% { opacity:1; }
+  50% { opacity:0.4; }
+}
+.mobile-nav { display: none; }
         @media (max-width: 768px) {
           .topbar { padding: 0 16px; }
           .nav-links { display: none; }
@@ -470,13 +476,19 @@ export default function ArenaPage() {
 
         {/* ACTIVE COMBAT VIEW */}
         {arenaStatus === "active" && rival && problem && (
-          <div style={{marginBottom:24}}>
-            <div style={{display:"flex", alignItems:"center", justifycontent:"space-between", marginBottom:16, fontFamily:"Share Tech Mono", fontSize:12}}>
-              <div style={{color:"#ef4444", letterSpacing:2}}>⚔️ SECTOR: {battleMode?.toUpperCase()} // CONFIG: {problem.title.toUpperCase()}</div>
-              <div style={{color:"#facc15", fontSize:16, fontFamily:"Orbitron", fontWeight:900, letterSpacing:3}}>
-                {formatTime(battleTimer)}
-              </div>
-            </div>
+  <div style={{marginBottom:24}}>
+    <div style={{display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16, fontFamily:"Share Tech Mono", fontSize:12}}>
+      <div style={{color:"#ef4444", letterSpacing:2}}>⚔️ SECTOR: {battleMode?.toUpperCase()} // {problem.title.toUpperCase()}</div>
+      <div style={{
+        color: battleTimer < 60 ? "#ef4444" : "#facc15",
+        fontSize:20, fontFamily:"Orbitron", fontWeight:900, letterSpacing:3,
+        background:"rgba(250,204,21,0.05)", border:"1px solid rgba(250,204,21,0.2)",
+        padding:"6px 16px",
+        animation: battleTimer < 60 ? "pulse 1s infinite" : "none"
+      }}>
+        ⏱ {formatTime(battleTimer)}
+      </div>
+    </div>
 
             {/* REALTIME GRAPHICAL SUBSECTION PROGRESSION BARS */}
             <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:16}}>
