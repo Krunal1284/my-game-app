@@ -229,15 +229,27 @@ export default function SolvePage() {
           .single();
 
         if (userData) {
-          await supabase
-            .from('users')
-            .update({
-              xp: (userData.xp || 0) + PROBLEM.xp,
-              solved: (userData.solved || 0) + 1,
-              level: Math.floor(((userData.xp || 0) + PROBLEM.xp) / 1000) + 1,
-            })
-            .eq('email', user.email);
-        }
+  await supabase
+    .from('users')
+    .update({
+      xp: (userData.xp || 0) + PROBLEM.xp,
+      solved: (userData.solved || 0) + 1,
+      level: Math.floor(((userData.xp || 0) + PROBLEM.xp) / 1000) + 1,
+    })
+    .eq('email', user.email);
+
+  // Save submission to database
+  await supabase.from('submissions').insert({
+    user_id: user.id,
+    problem_id: PROBLEM.id,
+    problem_title: PROBLEM.title,
+    language: lang,
+    code: code,
+    status: 'ACCEPTED',
+    xp_earned: PROBLEM.xp,
+    time_taken: time,
+  });
+}
       }
     }, 2400);
   };
