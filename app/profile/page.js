@@ -1,6 +1,7 @@
 "use client";
 
 import { supabase } from '@/lib/supabase';
+import { ensureUserProfile } from '@/lib/ensureUserProfile';
 import { useState, useEffect, useRef } from "react";
 
 const BADGES = [
@@ -47,12 +48,8 @@ useEffect(() => {
       window.location.href = '/login';
       return;
     }
-    const { data } = await supabase
-      .from('users')
-      .select('*')
-      .eq('email', authUser.email)
-      .single();
-    setUser(data);
+    const profile = await ensureUserProfile(authUser);
+    setUser(profile);
   };
   getUser();
 }, []);

@@ -3,6 +3,7 @@
 import { supabase } from '@/lib/supabase';
 import { useState, useEffect, useRef } from "react";
 import { updateStreak } from '@/lib/streak';
+import { ensureUserProfile } from '@/lib/ensureUserProfile';
 
 const QUESTS = [
   { id: 1, title: "Two Sum", tag: "ARRAY", xp: 120, diff: "EASY", done: true },
@@ -47,12 +48,8 @@ export default function Dashboard() {
     if (window.location.hash) window.history.replaceState(null, '', '/dashboard');
     
     await updateStreak(user.email);
-    const { data } = await supabase
-      .from('users')
-      .select('*')
-      .eq('email', user.email)
-      .single();
-    setUser(data);
+    const profile = await ensureUserProfile(user);
+    setUser(profile);
   };
   getUser();
 }, []);

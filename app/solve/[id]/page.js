@@ -80,13 +80,17 @@ export default function SolvePage() {
   const [activeLeft, setActiveLeft] = useState("description");
   const [activeBottom, setActiveBottom] = useState("testcases");
   const [testCases, setTestCases] = useState(TEST_CASES);
-  const [runStatus, setRunStatus] = useState(null); // null | 'running' | 'passed' | 'failed'
-  const [submitStatus, setSubmitStatus] = useState(null);
+  const [runStatus, setRunStatus] = useState(null); // null | 'passed' | 'failed'
+  const [submitStatus, setSubmitStatus] = useState(null); // null | 'accepted' | 'failed'
+  const [isJudging, setIsJudging] = useState(false);
+  const [judgeMode, setJudgeMode] = useState(null); // 'run' | 'submit'
+  const [judgeError, setJudgeError] = useState(null);
   const [bottomOpen, setBottomOpen] = useState(true);
   const [hintsShown, setHintsShown] = useState(0);
   const [time, setTime] = useState(0);
   const [timerActive, setTimerActive] = useState(true);
   const [showXPBurst, setShowXPBurst] = useState(false);
+  const [animatedXp, setAnimatedXp] = useState(0);
   const [splitPos, setSplitPos] = useState(42); // percent for left panel
   const canvasRef = useRef(null);
   const textareaRef = useRef(null);
@@ -104,6 +108,29 @@ export default function SolvePage() {
     const sec = (s % 60).toString().padStart(2, "0");
     return `${m}:${sec}`;
   };
+
+  const passedCount = testCases.filter((tc) => tc.status === "pass").length;
+  const failedCount = testCases.filter((tc) => tc.status === "fail").length;
+
+  useEffect(() => {
+    if (!showXPBurst) {
+      setAnimatedXp(0);
+      return;
+    }
+
+    const start = performance.now();
+    const duration = 1400;
+    const target = PROBLEM.xp;
+
+    const tick = (now) => {
+      const progress = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setAnimatedXp(Math.round(target * eased));
+      if (progress < 1) requestAnimationFrame(tick);
+    };
+
+    requestAnimationFrame(tick);
+  }, [showXPBurst]);
 
   // Sync starter code when lang changes
   useEffect(() => {
@@ -166,93 +193,167 @@ export default function SolvePage() {
     }
   };
 
-  const handleRun = async () => {
-  setRunStatus("running");
-  setActiveBottom("testcases");
+  const runJudge = async () => {
+    try {
+      const response = await fetch("/api/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code,
+          language: lang,
+          testCases: testCases.map(({ id, input, expected }) => ({
+            id,
+            input,
+            expected,
+          })),
+        }),
+      });
 
-  const langMap = {
-    python: "python",
-    javascript: "node",
-    java: "java",
-    cpp: "c++",
+      let data;
+      try {
+        data = await response.json();
+      } catch {
+        return {
+          ok: false,
+          passed: false,
+          output: "Invalid response from judge API",
+          results: [],
+        };
+      }
+
+      return {
+        ok: response.ok,
+        passed: Boolean(data.passed),
+        output: data.output ?? "Judging failed",
+        results: Array.isArray(data.results) ? data.results : [],
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        passed: false,
+        output: error?.message || "Could not reach judge API",
+        results: [],
+      };
+    }
   };
 
-  try {
-    const response = await fetch("https://emkc.org/api/v2/piston/execute", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        language: langMap[lang],
-        version: "*",
-        files: [{ content: code }],
-      }),
-    });
+  const applyJudgeResults = (results, fallbackOutput = "") => {
+    if (results.length > 0) {
+      setTestCases((prev) =>
+        prev.map((tc) => {
+          const match = results.find((r) => r.id === tc.id);
+          return match
+            ? { ...tc, output: match.output, status: match.status }
+            : tc;
+        })
+      );
+      return;
+    }
 
-    const data = await response.json();
-    const output = data.run.stdout || data.run.stderr || "No output";
+    setTestCases((prev) =>
+      prev.map((tc, index) =>
+        index === 0
+          ? { ...tc, output: fallbackOutput, status: "fail" }
+          : { ...tc, status: "fail" }
+      )
+    );
+  };
 
-    const results = testCases.map((tc) => ({
-      ...tc,
-      output,
-       status: data.run.stderr 
-       ? "fail" 
-       : output.trim() === tc.expected.trim() 
-       ? "pass" 
-        : "fail",
-      }));
+  const executeJudge = async (mode) => {
+    setIsJudging(true);
+    setJudgeMode(mode);
+    setJudgeError(null);
+    setActiveBottom("testcases");
+    setBottomOpen(true);
 
-    setTestCases(results);
-    setRunStatus("passed");
-  } catch (err) {
-    setRunStatus("failed");
-  }
-};
+    if (mode === "submit") {
+      setSubmitStatus(null);
+    }
 
-  const handleSubmit = async () => {
-    setRunStatus("running");
-    setSubmitStatus(null);
-    setTimeout(async () => {
+    try {
+      const verdict = await runJudge();
+      applyJudgeResults(verdict.results, verdict.output);
+
+      if (!verdict.ok) {
+        setJudgeError(verdict.output);
+        setRunStatus("failed");
+        if (mode === "submit") {
+          setSubmitStatus("failed");
+          setActiveBottom("result");
+        }
+        return;
+      }
+
+      if (mode === "run") {
+        setRunStatus(verdict.passed ? "passed" : "failed");
+        if (!verdict.passed && verdict.output) {
+          setJudgeError(verdict.output);
+        }
+        return;
+      }
+
+      if (!verdict.passed) {
+        setRunStatus("failed");
+        setSubmitStatus("failed");
+        setActiveBottom("result");
+        if (verdict.output) setJudgeError(verdict.output);
+        return;
+      }
+
       setTimerActive(false);
-      setRunStatus(null);
+      setRunStatus("passed");
       setSubmitStatus("accepted");
       setShowXPBurst(true);
       setActiveBottom("result");
-      setTimeout(() => setShowXPBurst(false), 3000);
+      setTimeout(() => setShowXPBurst(false), 3200);
 
-      // Save XP to database
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const { data: userData } = await supabase
-          .from('users')
-          .select('*')
-          .eq('email', user.email)
+          .from("users")
+          .select("*")
+          .eq("email", user.email)
           .single();
 
         if (userData) {
-  await supabase
-    .from('users')
-    .update({
-      xp: (userData.xp || 0) + PROBLEM.xp,
-      solved: (userData.solved || 0) + 1,
-      level: Math.floor(((userData.xp || 0) + PROBLEM.xp) / 1000) + 1,
-    })
-    .eq('email', user.email);
+          await supabase
+            .from("users")
+            .update({
+              xp: (userData.xp || 0) + PROBLEM.xp,
+              solved: (userData.solved || 0) + 1,
+              level:
+                Math.floor(((userData.xp || 0) + PROBLEM.xp) / 1000) + 1,
+            })
+            .eq("email", user.email);
 
-  // Save submission to database
-  await supabase.from('submissions').insert({
-    user_id: user.id,
-    problem_id: PROBLEM.id,
-    problem_title: PROBLEM.title,
-    language: lang,
-    code: code,
-    status: 'ACCEPTED',
-    xp_earned: PROBLEM.xp,
-    time_taken: time,
-  });
-}
+          await supabase.from("submissions").insert({
+            user_id: user.id,
+            problem_id: PROBLEM.id,
+            problem_title: PROBLEM.title,
+            language: lang,
+            code,
+            status: "ACCEPTED",
+            xp_earned: PROBLEM.xp,
+            time_taken: time,
+          });
+        }
       }
-    }, 2400);
+    } catch (error) {
+      const message = error?.message || "Judge request failed";
+      setJudgeError(message);
+      setRunStatus("failed");
+      if (mode === "submit") {
+        setSubmitStatus("failed");
+        setActiveBottom("result");
+      }
+    } finally {
+      setIsJudging(false);
+      setJudgeMode(null);
+    }
   };
+
+  const handleRun = () => executeJudge("run");
+  const handleSubmit = () => executeJudge("submit");
 
   const diffColor = (d) => d === "EASY" ? "#22c55e" : d === "MEDIUM" ? "#f59e0b" : "#ef4444";
 
@@ -543,18 +644,47 @@ export default function SolvePage() {
         }
         .tc-item.pass { border-color: rgba(34,197,94,0.3); background: rgba(34,197,94,0.03); }
         .tc-item.fail { border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.03); }
-        .tc-num { font-family: 'Share Tech Mono', monospace; font-size: 9px; color: rgba(255,255,255,0.2); letter-spacing: 2px; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
-        .tc-status-dot { width: 6px; height: 6px; border-radius: 50%; }
-        .tc-status-dot.pass { background: #22c55e; }
-        .tc-status-dot.fail { background: #ef4444; }
-        .tc-io { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: rgba(255,255,255,0.4); line-height: 1.6; }
+        .tc-item.pending { border-color: rgba(255,255,255,0.06); }
+        .tc-num { font-family: 'Share Tech Mono', monospace; font-size: 9px; color: rgba(255,255,255,0.2); letter-spacing: 2px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+        .tc-num-left { display: flex; align-items: center; gap: 8px; }
+        .tc-status-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+        .tc-status-dot.pass { background: #22c55e; box-shadow: 0 0 6px rgba(34,197,94,0.6); }
+        .tc-status-dot.fail { background: #ef4444; box-shadow: 0 0 6px rgba(239,68,68,0.6); }
+        .tc-status-label {
+          font-family: 'Orbitron', monospace; font-size: 8px; font-weight: 700; letter-spacing: 1px;
+          padding: 2px 6px; border: 1px solid transparent;
+        }
+        .tc-status-label.pass { color: #22c55e; border-color: rgba(34,197,94,0.35); background: rgba(34,197,94,0.08); }
+        .tc-status-label.fail { color: #ef4444; border-color: rgba(239,68,68,0.35); background: rgba(239,68,68,0.08); }
+        .tc-status-label.pending { color: rgba(255,255,255,0.25); border-color: rgba(255,255,255,0.08); }
+        .tc-io { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: rgba(255,255,255,0.4); line-height: 1.7; }
         .tc-io span { color: rgba(250,204,21,0.6); }
+        .tc-row { margin-bottom: 4px; word-break: break-all; }
+        .tc-row.mismatch { color: #fca5a5; }
+        .tc-row.mismatch span { color: #f87171; }
 
         /* RUNNING STATE */
         .running-bar {
-          display: flex; align-items: center; gap: 10px;
+          display: flex; flex-direction: column; align-items: center; justify-content: center;
+          gap: 12px; min-height: 120px; width: 100%;
           font-family: 'Share Tech Mono', monospace; font-size: 10px; color: rgba(250,204,21,0.5); letter-spacing: 2px;
         }
+        .running-bar-title { font-family: 'Orbitron', monospace; font-size: 12px; color: #facc15; letter-spacing: 3px; }
+        .running-bar-sub { font-size: 9px; color: rgba(255,255,255,0.25); letter-spacing: 1px; }
+        .judge-error-banner {
+          margin-bottom: 12px; padding: 10px 12px;
+          background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.25);
+          font-family: 'Share Tech Mono', monospace; font-size: 10px; color: #fca5a5;
+          line-height: 1.5; letter-spacing: 0.5px;
+          clip-path: polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,0 100%);
+        }
+        .judge-error-banner strong { color: #ef4444; letter-spacing: 1px; }
+        .run-status-chip {
+          font-family: 'Share Tech Mono', monospace; font-size: 9px; letter-spacing: 1px;
+          padding: 4px 8px; border: 1px solid rgba(255,255,255,0.1);
+        }
+        .run-status-chip.passed { color: #22c55e; border-color: rgba(34,197,94,0.3); }
+        .run-status-chip.failed { color: #ef4444; border-color: rgba(239,68,68,0.3); }
         .running-dots span {
           display: inline-block; width: 4px; height: 4px; background: #facc15; border-radius: 50%;
           animation: dotBounce 1s infinite; margin-right: 3px;
@@ -565,20 +695,56 @@ export default function SolvePage() {
 
         /* RESULT */
         .result-panel { display: flex; flex-direction: column; gap: 10px; }
-        .result-accepted {
+        .result-accepted, .result-failed {
           display: flex; align-items: center; gap: 14px;
-          background: rgba(34,197,94,0.06); border: 1px solid rgba(34,197,94,0.2);
           padding: 12px 16px;
           clip-path: polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%);
+          animation: resultBannerIn 0.35s ease;
+        }
+        .result-accepted {
+          background: rgba(34,197,94,0.06); border: 1px solid rgba(34,197,94,0.2);
+        }
+        .result-failed {
+          background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.25);
+        }
+        @keyframes resultBannerIn {
+          from { opacity: 0; transform: translateY(6px); }
+          to { opacity: 1; transform: translateY(0); }
         }
         .result-icon { font-size: 22px; }
-        .result-text { }
-        .result-heading { font-family: 'Orbitron', monospace; font-size: 14px; font-weight: 700; color: #22c55e; margin-bottom: 2px; letter-spacing: 1px; }
+        .result-text { flex: 1; }
+        .result-heading {
+          font-family: 'Orbitron', monospace; font-size: 14px; font-weight: 700;
+          margin-bottom: 2px; letter-spacing: 1px;
+        }
+        .result-heading.accepted { color: #22c55e; }
+        .result-heading.failed { color: #ef4444; }
         .result-sub { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: rgba(255,255,255,0.3); letter-spacing: 1px; }
-        .result-stats { display: flex; gap: 16px; }
+        .result-error-detail {
+          margin-top: 8px; font-family: 'Share Tech Mono', monospace; font-size: 10px;
+          color: #fca5a5; line-height: 1.5; word-break: break-word;
+        }
+        .result-stats { display: flex; gap: 16px; flex-wrap: wrap; }
         .result-stat { text-align: center; }
-        .result-stat-val { font-family: 'Orbitron', monospace; font-size: 16px; font-weight: 700; color: #facc15; }
+        .result-stat-val {
+          font-family: 'Orbitron', monospace; font-size: 16px; font-weight: 700; color: #facc15;
+          transition: transform 0.2s ease, text-shadow 0.2s ease;
+        }
+        .result-stat-val.xp-pop {
+          animation: xpStatPop 0.6s ease;
+          text-shadow: 0 0 12px rgba(250,204,21,0.5);
+        }
+        @keyframes xpStatPop {
+          0% { transform: scale(0.85); }
+          50% { transform: scale(1.12); }
+          100% { transform: scale(1); }
+        }
         .result-stat-lbl { font-family: 'Share Tech Mono', monospace; font-size: 9px; color: rgba(255,255,255,0.25); letter-spacing: 1px; }
+        .xp-pill.earned { animation: xpPillPulse 1.4s ease; border-color: rgba(250,204,21,0.5); }
+        @keyframes xpPillPulse {
+          0%, 100% { box-shadow: none; }
+          40% { box-shadow: 0 0 16px rgba(250,204,21,0.35); }
+        }
 
         /* XP BURST */
         .xp-burst {
@@ -609,7 +775,7 @@ export default function SolvePage() {
 
       {showXPBurst && (
         <div className="xp-burst">
-          <div className="xp-burst-num">+{PROBLEM.xp}</div>
+          <div className="xp-burst-num">+{animatedXp || PROBLEM.xp}</div>
           <div className="xp-burst-lbl">XP EARNED</div>
         </div>
       )}
@@ -637,13 +803,13 @@ export default function SolvePage() {
           </div>
 
           <div className="topbar-right">
-            <div className="xp-pill">
+            <div className={`xp-pill ${showXPBurst ? "earned" : ""}`}>
               <span className="xp-hex">⚡</span>
-              +{PROBLEM.xp} XP
+              {showXPBurst ? `+${animatedXp} XP` : `+${PROBLEM.xp} XP`}
             </div>
             <div className={`timer ${!timerActive ? "stopped" : ""}`}>{formatTime(time)}</div>
-            <button className="run-btn" onClick={handleRun} disabled={runStatus === "running"}>▶ RUN</button>
-            <button className="submit-btn" onClick={handleSubmit} disabled={runStatus === "running"}>⬡ SUBMIT</button>
+            <button className="run-btn" onClick={handleRun} disabled={isJudging}>▶ RUN</button>
+            <button className="submit-btn" onClick={handleSubmit} disabled={isJudging}>⬡ SUBMIT</button>
           </div>
         </header>
 
@@ -809,37 +975,78 @@ export default function SolvePage() {
                       onClick={(e) => { e.stopPropagation(); setActiveBottom(t); setBottomOpen(true); }}>
                       {t.toUpperCase()}
                       {t === "result" && submitStatus === "accepted" && " ✓"}
+                      {t === "result" && submitStatus === "failed" && " ✗"}
                     </button>
                   ))}
+                  {!isJudging && runStatus && (
+                    <span className={`run-status-chip ${runStatus}`}>
+                      {runStatus === "passed" ? `${passedCount}/${testCases.length} PASSED` : `${failedCount} FAILED`}
+                    </span>
+                  )}
                 </div>
                 <button className="toggle-btn">{bottomOpen ? "▾" : "▴"}</button>
               </div>
 
               {bottomOpen && (
                 <div className="bottom-body">
-                  {runStatus === "running" ? (
+                  {isJudging ? (
                     <div className="running-bar">
                       <div className="running-dots">
                         <span /><span /><span />
                       </div>
-                      EXECUTING CODE...
+                      <div className="running-bar-title">
+                        {judgeMode === "submit" ? "JUDGING SUBMISSION" : "RUNNING TESTS"}
+                      </div>
+                      <div className="running-bar-sub">
+                        Executing {testCases.length} test case{testCases.length !== 1 ? "s" : ""} via judge API…
+                      </div>
                     </div>
                   ) : activeBottom === "testcases" ? (
-                    <div className="tc-grid">
-                      {testCases.map((tc) => (
-                        <div key={tc.id} className={`tc-item ${tc.status || ""}`}>
-                          <div className="tc-num">
-                            {tc.status && <div className={`tc-status-dot ${tc.status}`} />}
-                            CASE {tc.id}
-                          </div>
-                          <div className="tc-io">
-                      <span>IN:</span> {tc.input}<br />
-                       <span>EXP:</span> {tc.expected}<br />
-                      {tc.output && <><span>OUT:</span> {tc.output}</>}
-                      </div>
+                    <>
+                      {judgeError && (
+                        <div className="judge-error-banner">
+                          <strong>JUDGE ERROR</strong>
+                          <br />
+                          {judgeError}
                         </div>
-                      ))}
-                    </div>
+                      )}
+                      <div className="tc-grid">
+                        {testCases.map((tc) => {
+                          const statusLabel = tc.status === "pass"
+                            ? "PASS"
+                            : tc.status === "fail"
+                              ? "FAIL"
+                              : "PENDING";
+                          const outMismatch = tc.status === "fail" && tc.output;
+
+                          return (
+                            <div key={tc.id} className={`tc-item ${tc.status || "pending"}`}>
+                              <div className="tc-num">
+                                <span className="tc-num-left">
+                                  {tc.status && <div className={`tc-status-dot ${tc.status}`} />}
+                                  CASE {tc.id}
+                                </span>
+                                <span className={`tc-status-label ${tc.status || "pending"}`}>
+                                  {statusLabel}
+                                </span>
+                              </div>
+                              <div className="tc-io">
+                                <div className="tc-row"><span>IN:</span> {tc.input}</div>
+                                <div className="tc-row"><span>EXP:</span> {tc.expected}</div>
+                                {tc.output !== undefined && tc.output !== "" && (
+                                  <div className={`tc-row ${outMismatch ? "mismatch" : ""}`}>
+                                    <span>OUT:</span> {tc.output}
+                                  </div>
+                                )}
+                                {tc.status === "fail" && !tc.output && (
+                                  <div className="tc-row mismatch"><span>OUT:</span> (no output)</div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </>
                   ) : (
                     <div className="result-panel">
                       {submitStatus === "accepted" ? (
@@ -847,27 +1054,69 @@ export default function SolvePage() {
                           <div className="result-accepted">
                             <div className="result-icon">✦</div>
                             <div className="result-text">
-                              <div className="result-heading">ACCEPTED</div>
-                              <div className="result-sub">ALL {testCases.length} TEST CASES PASSED · {formatTime(time)}</div>
+                              <div className="result-heading accepted">ACCEPTED</div>
+                              <div className="result-sub">
+                                ALL {testCases.length} TEST CASES PASSED · {formatTime(time)}
+                              </div>
                             </div>
                           </div>
                           <div className="result-stats">
                             {[
-                              { val: `+${PROBLEM.xp}`, lbl: "XP EARNED" },
-                              { val: "84%", lbl: "FASTER THAN" },
-                              { val: "91%", lbl: "LESS MEMORY" },
-                              { val: `${formatTime(time)}`, lbl: "TIME TAKEN" },
+                              { val: `+${animatedXp || PROBLEM.xp}`, lbl: "XP EARNED", xp: true },
+                              { val: `${passedCount}/${testCases.length}`, lbl: "TESTS PASSED" },
+                              { val: lang.toUpperCase(), lbl: "LANGUAGE" },
+                              { val: formatTime(time), lbl: "TIME TAKEN" },
                             ].map((r) => (
                               <div key={r.lbl} className="result-stat">
-                                <div className="result-stat-val">{r.val}</div>
+                                <div className={`result-stat-val ${r.xp && showXPBurst ? "xp-pop" : ""}`}>
+                                  {r.val}
+                                </div>
                                 <div className="result-stat-lbl">{r.lbl}</div>
+                              </div>
+                            ))}
+                          </div>
+                        </>
+                      ) : submitStatus === "failed" ? (
+                        <>
+                          <div className="result-failed">
+                            <div className="result-icon">✕</div>
+                            <div className="result-text">
+                              <div className="result-heading failed">FAILED</div>
+                              <div className="result-sub">
+                                {passedCount}/{testCases.length} TEST CASES PASSED · {formatTime(time)}
+                              </div>
+                              {judgeError && (
+                                <div className="result-error-detail">{judgeError}</div>
+                              )}
+                            </div>
+                          </div>
+                          <div className="tc-grid">
+                            {testCases.map((tc) => (
+                              <div key={tc.id} className={`tc-item ${tc.status || "fail"}`}>
+                                <div className="tc-num">
+                                  <span className="tc-num-left">
+                                    <div className={`tc-status-dot ${tc.status || "fail"}`} />
+                                    CASE {tc.id}
+                                  </span>
+                                  <span className={`tc-status-label ${tc.status || "fail"}`}>
+                                    {tc.status === "pass" ? "PASS" : "FAIL"}
+                                  </span>
+                                </div>
+                                <div className="tc-io">
+                                  <div className="tc-row"><span>EXP:</span> {tc.expected}</div>
+                                  {tc.output && (
+                                    <div className={`tc-row ${tc.status === "fail" ? "mismatch" : ""}`}>
+                                      <span>OUT:</span> {tc.output}
+                                    </div>
+                                  )}
+                                </div>
                               </div>
                             ))}
                           </div>
                         </>
                       ) : (
                         <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "rgba(255,255,255,0.2)", letterSpacing: 2 }}>
-                          // Submit your solution to see results
+                          {"// Submit your solution to see results"}
                         </div>
                       )}
                     </div>

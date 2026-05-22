@@ -1,6 +1,7 @@
 "use client";
 
 import { supabase } from '@/lib/supabase';
+import { ensureUserProfile } from '@/lib/ensureUserProfile';
 import { useState, useEffect, useRef } from "react";
 
 const PLAYERS = [
@@ -66,12 +67,8 @@ useEffect(() => {
 
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
-      const { data: userData } = await supabase
-        .from('users')
-        .select('*')
-        .eq('email', user.email)
-        .single();
-      setCurrentUser(userData);
+      const profile = await ensureUserProfile(user);
+      setCurrentUser(profile);
     }
   };
   fetchData();

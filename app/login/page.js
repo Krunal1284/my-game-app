@@ -71,11 +71,10 @@ export default function LoginPage() {
   }, []);
 
   const handleGoogleLogin = async () => {
+    const redirectTo = `${window.location.origin}/auth/callback?next=/dashboard`;
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: {
-        redirectTo: 'https://my-game-app-beta.vercel.app/dashboard'
-      }
+      options: { redirectTo },
     });
     if (error) alert(error.message);
   };
@@ -86,15 +85,12 @@ export default function LoginPage() {
     setLoading(true);
     setTimeout(() => setGlitch(false), 600);
 
-    const { data, error } = await supabase.auth.signInWithPassword({
-  email: form.email,
-  password: form.password,
-});
+    const { error } = await supabase.auth.signInWithPassword({
+      email: form.email,
+      password: form.password,
+    });
 
-console.log("DATA:", data);
-console.log("ERROR:", error);
-
-   if (error) {
+    if (error) {
   alert("ERROR: " + error.message);
       setLoading(false);
     } else {
