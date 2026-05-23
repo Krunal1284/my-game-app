@@ -36,7 +36,7 @@ export default function LeaderboardPage() {
   const [loaded, setLoaded] = useState(false);
   const [hoveredRow, setHoveredRow] = useState(null);
   const canvasRef = useRef(null);
-  const [players, setPlayers] = useState(PLAYERS);
+  const [players, setPlayers] = useState([]);
 const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => { setTimeout(() => setLoaded(true), 100); }, []);
