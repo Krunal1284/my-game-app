@@ -3,71 +3,6 @@
 import { supabase } from '@/lib/supabase';
 import { useState, useEffect, useRef } from "react";
 
-const PROBLEM = {
-  id: 3,
-  title: "Merge Intervals",
-  tag: "SORTING",
-  diff: "MEDIUM",
-  xp: 280,
-  acceptance: "46.2%",
-  submissions: "2.1M",
-  description: `Given an array of intervals where intervals[i] = [starti, endi], merge all overlapping intervals, and return an array of the non-overlapping intervals that cover all the intervals in the input.`,
-  examples: [
-    {
-      input: "intervals = [[1,3],[2,6],[8,10],[15,18]]",
-      output: "[[1,6],[8,10],[15,18]]",
-      explanation: "Since intervals [1,3] and [2,6] overlap, merge them into [1,6].",
-    },
-    {
-      input: "intervals = [[1,4],[4,5]]",
-      output: "[[1,5]]",
-      explanation: "Intervals [1,4] and [4,5] are considered overlapping.",
-    },
-  ],
-  constraints: [
-    "1 <= intervals.length <= 10⁴",
-    "intervals[i].length == 2",
-    "0 <= starti <= endi <= 10⁴",
-  ],
-  hints: [
-    "Sort the intervals by their start point.",
-    "After sorting, can you figure out which intervals overlap?",
-    "Check if the current interval's start is ≤ previous interval's end.",
-  ],
-  starterCode: {
-    python: `class Solution:
-    def merge(self, intervals: List[List[int]]) -> List[List[int]]:
-        # Your solution here
-        pass`,
-    javascript: `/**
- * @param {number[][]} intervals
- * @return {number[][]}
- */
-var merge = function(intervals) {
-    // Your solution here
-};`,
-    java: `class Solution {
-    public int[][] merge(int[][] intervals) {
-        // Your solution here
-        return new int[][]{};
-    }
-}`,
-    cpp: `class Solution {
-public:
-    vector<vector<int>> merge(vector<vector<int>>& intervals) {
-        // Your solution here
-        return {};
-    }
-};`,
-  },
-};
-
-const SIMILAR = [
-  { id: 56, title: "Insert Interval", diff: "MEDIUM", xp: 280 },
-  { id: 57, title: "Meeting Rooms", diff: "EASY", xp: 120 },
-  { id: 58, title: "Non-overlapping Intervals", diff: "MEDIUM", xp: 280 },
-];
-
 const TEST_CASES = [
   { id: 1, input: "[[1,3],[2,6],[8,10],[15,18]]", expected: "[[1,6],[8,10],[15,18]]", status: null },
   { id: 2, input: "[[1,4],[4,5]]", expected: "[[1,5]]", status: null },
@@ -75,8 +10,19 @@ const TEST_CASES = [
 ];
 
 export default function SolvePage() {
+  const [problem, setProblem] = useState(null);
   const [lang, setLang] = useState("python");
-  const [code, setCode] = useState(PROBLEM.starterCode.python);
+
+  useEffect(() => {
+    const id = window.location.pathname.split('/').pop();
+    supabase.from('problems').select('*').eq('id', id).single().then(({ data }) => {
+      if (data) {
+        setProblem(data);
+        setCode(data.starter_code || '// Write your solution here');
+      }
+    });
+  }, []);
+  const [code, setCode] = useState("// Write your solution here");
   const [activeLeft, setActiveLeft] = useState("description");
   const [activeBottom, setActiveBottom] = useState("testcases");
   const [testCases, setTestCases] = useState(TEST_CASES);
@@ -107,7 +53,7 @@ export default function SolvePage() {
 
   // Sync starter code when lang changes
   useEffect(() => {
-    setCode(PROBLEM.starterCode[lang]);
+    setCode(problem?.starter_code || "// Write your solution here");
   }, [lang]);
 
   // Canvas hex bg
@@ -232,21 +178,21 @@ export default function SolvePage() {
   await supabase
     .from('users')
     .update({
-      xp: (userData.xp || 0) + PROBLEM.xp,
+      xp: (userData.xp || 0) + problem?.xp,
       solved: (userData.solved || 0) + 1,
-      level: Math.floor(((userData.xp || 0) + PROBLEM.xp) / 1000) + 1,
+      level: Math.floor(((userData.xp || 0) + problem?.xp) / 1000) + 1,
     })
     .eq('email', user.email);
 
   // Save submission to database
   await supabase.from('submissions').insert({
     user_id: user.id,
-    problem_id: PROBLEM.id,
-    problem_title: PROBLEM.title,
+    problem_id: problem?.id,
+    problem_title: problem?.title,
     language: lang,
     code: code,
     status: 'ACCEPTED',
-    xp_earned: PROBLEM.xp,
+    xp_earned: problem?.xp,
     time_taken: time,
   });
 }
@@ -255,7 +201,7 @@ export default function SolvePage() {
   };
 
   const diffColor = (d) => d === "EASY" ? "#22c55e" : d === "MEDIUM" ? "#f59e0b" : "#ef4444";
-
+  if (!problem) return <div style={{color:'#facc15', fontFamily:'monospace', padding:40}}>Loading...</div>;
   return (
     <>
       <style>{`
@@ -609,7 +555,7 @@ export default function SolvePage() {
 
       {showXPBurst && (
         <div className="xp-burst">
-          <div className="xp-burst-num">+{PROBLEM.xp}</div>
+          <div className="xp-burst-num">+{problem?.xp}</div>
           <div className="xp-burst-lbl">XP EARNED</div>
         </div>
       )}
@@ -620,10 +566,10 @@ export default function SolvePage() {
           <div className="topbar-left">
             <button className="back-btn">◂ ARENA</button>
             <div className="problem-title-bar">
-              <span className="problem-id">#{PROBLEM.id}</span>
-              <span className="problem-name">{PROBLEM.title}</span>
-              <span className="diff-badge" style={{ color: diffColor(PROBLEM.diff), borderColor: diffColor(PROBLEM.diff) + "40" }}>
-                {PROBLEM.diff}
+              <span className="problem-id">#{problem?.id}</span>
+              <span className="problem-name">{problem?.title}</span>
+              <span className="diff-badge" style={{ color: diffColor(problem?.diff), borderColor: diffColor(problem?.diff) + "40" }}>
+                {problem?.diff}
               </span>
             </div>
           </div>
@@ -639,7 +585,7 @@ export default function SolvePage() {
           <div className="topbar-right">
             <div className="xp-pill">
               <span className="xp-hex">⚡</span>
-              +{PROBLEM.xp} XP
+              +{problem?.xp} XP
             </div>
             <div className={`timer ${!timerActive ? "stopped" : ""}`}>{formatTime(time)}</div>
             <button className="run-btn" onClick={handleRun} disabled={runStatus === "running"}>▶ RUN</button>
@@ -656,7 +602,7 @@ export default function SolvePage() {
               {["description", "hints", "similar"].map((t) => (
                 <button key={t} className={`ptab ${activeLeft === t ? "active" : ""}`} onClick={() => setActiveLeft(t)}>
                   {t.toUpperCase()}
-                  {t === "hints" && ` (${hintsShown}/${PROBLEM.hints.length})`}
+                  {t === "hints" && ` (${hintsShown}/${problem?.hints.length})`}
                 </button>
               ))}
             </div>
@@ -667,21 +613,21 @@ export default function SolvePage() {
                 <>
                   <div className="problem-header">
                     <div className="problem-meta">
-                      <span className="diff-badge" style={{ color: diffColor(PROBLEM.diff), borderColor: diffColor(PROBLEM.diff) + "40" }}>
-                        {PROBLEM.diff}
+                      <span className="diff-badge" style={{ color: diffColor(problem?.diff), borderColor: diffColor(problem?.diff) + "40" }}>
+                        {problem?.diff}
                       </span>
-                      <span className="meta-chip">{PROBLEM.tag}</span>
-                      <span className="meta-chip">ACCEPT {PROBLEM.acceptance}</span>
-                      <span className="meta-chip">{PROBLEM.submissions} SUBMISSIONS</span>
+                      <span className="meta-chip">{problem?.tags}</span>
+                      <span className="meta-chip">ACCEPT {problem?.acceptance}</span>
+                      <span className="meta-chip">{problem?.submissions} SUBMISSIONS</span>
                     </div>
-                    <div className="problem-desc-title">{PROBLEM.title}</div>
-                    <div className="xp-tag">⚡ +{PROBLEM.xp} XP ON SOLVE</div>
+                    <div className="problem-desc-title">{problem?.title}</div>
+                    <div className="xp-tag">⚡ +{problem?.xp} XP ON SOLVE</div>
                   </div>
 
-                  <div className="desc-text">{PROBLEM.description}</div>
+                  <div className="desc-text">{problem?.description}</div>
 
                   <div className="section-label">EXAMPLES</div>
-                  {PROBLEM.examples.map((ex, i) => (
+                  {problem?.examples.map((ex, i) => (
                     <div key={i} className="example-box">
                       <div className="example-num">EXAMPLE {i + 1}</div>
                       <div className="io-row">
@@ -698,7 +644,7 @@ export default function SolvePage() {
 
                   <div className="section-label">CONSTRAINTS</div>
                   <ul className="constraint-list">
-                    {PROBLEM.constraints.map((c, i) => <li key={i}>{c}</li>)}
+                    {problem?.constraints.map((c, i) => <li key={i}>{c}</li>)}
                   </ul>
                 </>
               )}
@@ -707,13 +653,13 @@ export default function SolvePage() {
               {activeLeft === "hints" && (
                 <>
                   <div style={{ marginBottom: 12 }}>
-                    {PROBLEM.hints.slice(0, hintsShown).map((h, i) => (
+                    {problem?.hints.slice(0, hintsShown).map((h, i) => (
                       <div key={i} className="hint-item">
                         <div className="hint-num">HINT {i + 1}</div>
                         {h}
                       </div>
                     ))}
-                    {hintsShown < PROBLEM.hints.length && (
+                    {hintsShown < problem?.hints.length && (
                       <button className="hint-reveal-btn" onClick={() => setHintsShown((p) => p + 1)}>
                         ◦ REVEAL HINT {hintsShown + 1} <span style={{ marginLeft: "auto", opacity: 0.4 }}>(-5 XP)</span>
                       </button>
@@ -723,7 +669,7 @@ export default function SolvePage() {
                         // Stuck? Reveal hints one by one. Each costs 5 XP.
                       </div>
                     )}
-                    {hintsShown === PROBLEM.hints.length && (
+                    {hintsShown === problem?.hints.length && (
                       <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "rgba(34,197,94,0.4)", letterSpacing: 2, marginTop: 8 }}>
                         ✓ ALL HINTS REVEALED
                       </div>
@@ -774,7 +720,7 @@ export default function SolvePage() {
                   <span className="editor-label">// CODE EDITOR · {lang.toUpperCase()}</span>
                 </div>
                 <div style={{ display: "flex", gap: 4 }}>
-                  <button className="toolbar-action" onClick={() => setCode(PROBLEM.starterCode[lang])}>RESET</button>
+                  <button className="toolbar-action" onClick={() => setCode(problem?.starter_code || "// Write your solution here")}>RESET</button>
                   <button className="toolbar-action">FORMAT</button>
                   <button className="toolbar-action">FULLSCREEN</button>
                 </div>
@@ -853,7 +799,7 @@ export default function SolvePage() {
                           </div>
                           <div className="result-stats">
                             {[
-                              { val: `+${PROBLEM.xp}`, lbl: "XP EARNED" },
+                              { val: `+${problem?.xp}`, lbl: "XP EARNED" },
                               { val: "84%", lbl: "FASTER THAN" },
                               { val: "91%", lbl: "LESS MEMORY" },
                               { val: `${formatTime(time)}`, lbl: "TIME TAKEN" },
