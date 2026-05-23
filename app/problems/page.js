@@ -475,7 +475,7 @@ const diffColor = (d) => d === "EASY" ? "#22c55e" : d === "MEDIUM" ? "#f59e0b" :
                 onClick={() => {
             if (n === "Dashboard") window.location.href = "/dashboard";
             if (n === "Problems") window.location.href = "/problems";
-            if (n === "Arena") window.location.href = "/arena";
+            if (n === "Arena (Live)") window.location.href = "/arena";
             if (n === "Leaderboard") window.location.href = "/leaderboard";
             if (n === "Profile") window.location.href = "/profile";
             }}>
