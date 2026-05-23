@@ -368,14 +368,14 @@ useEffect(() => {
             CODEARENA
           </div>
           <nav className="nav-links">
-            {["Dashboard", "Problems", "Arena", "Leaderboard", "Profile", "Settings"].map((n) => (
-              <button key={n} className={`nav-link ${n === "Profile" ? "active" : ""}`}
-                onClick={() => {
-                  window.location.href = `/${n.toLowerCase()}`;
-                }}>
-                {n === "Arena" ? "Arena ⚔️" : n === "Settings" ? "Settings ⚙️" : n}
-              </button>
-            ))}
+            {["Dashboard", "Problems", "Arena", "Leaderboard", "Profile"].map((n) => (
+  <button key={n} className={`nav-link ${n === "Profile" ? "active" : ""}`}
+    onClick={() => {
+      window.location.href = `/${n.toLowerCase()}`;
+    }}>
+    {n}
+  </button>
+))}
           </nav>
           <div className="avatar" onClick={() => window.location.href = "/settings"}>KG</div>
         </header>
