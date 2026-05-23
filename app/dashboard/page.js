@@ -1110,7 +1110,7 @@ export default function Dashboard() {
         {[
         { icon: "🏠", label: "Dashboard", active: true, link: "/dashboard" },
         { icon: "📋", label: "Quests", count: "247", link: "/problems" },
-        { icon: "⚔️", label: "Arena (Live)", link: "/arena" },
+        { icon: "⚔️", label: "Arena", link: "/arena" },
         { icon: "🏆", label: "Leaderboard", link: "/leaderboard" },
         { icon: "⚙️", label: "Settings", link: "/settings" },
         ].map((item) => (
