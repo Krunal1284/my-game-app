@@ -448,7 +448,7 @@ export default function ArenaPage() {
 ))}
         </nav>
         <div className="avatar" onClick={() => window.location.href = "/profile"}>
-  {arenaStats?.username?.slice(0,2).toUpperCase() || "KG"}
+  KG
 </div>
       </header>
 
