@@ -623,7 +623,7 @@ export default function ArenaPage() {
         {[
           { icon: "🏠", label: "Home", link: "/dashboard" },
           { icon: "📋", label: "Quests", link: "/problems" },
-         { icon: "⚔️", label: "Arena (Live)", link: "/arena" },
+         { icon: "⚔️", label: "Arena", link: "/arena" },
           { icon: "🏆", label: "Board", link: "/leaderboard" },
           { icon: "⚙️", label: "Settings", link: "/settings" },
         ].map((item) => (
