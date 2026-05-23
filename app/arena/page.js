@@ -386,7 +386,7 @@ export default function ArenaPage() {
 .nav-link.active { color: #facc15; }
 .avatar { width: 34px; height: 34px; background: linear-gradient(135deg, #facc15, #f59e0b); clip-path: polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #080810; cursor: pointer; font-family: 'Orbitron', monospace; }
         
-        .main-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 30px; margin-top: 60px; }
+        .main-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 30px; margin-top: 20px; }
         .hero-panel { background: rgba(239, 68, 68, 0.03); border: 1px solid rgba(239, 68, 68, 0.2); padding: 40px; text-align: center; clip-path: polygon(0 0, calc(100% - 30px) 0, 100% 30px, 100% 100%, 0 100%); position: relative; }
         .hero-panel::after { content: 'LIVE_'; position: absolute; top: 15px; left: 20px; font-family: 'Share Tech Mono'; color: #ef4444; font-size: 12px; letter-spacing: 2px; }
         .arena-title { font-family: 'Orbitron', sans-serif; font-size: 32px; font-weight: 900; color: #fff; letter-spacing: 4px; margin-bottom: 8px; text-transform: uppercase; text-shadow: 0 0 20px rgba(239,68,68,0.3); }
