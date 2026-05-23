@@ -425,11 +425,12 @@ const filtered = players.filter((p) => {
             {["Dashboard","Problems","Arena","Leaderboard","Profile"].map((n) => (
               <button key={n} className={`nav-link ${n === "Leaderboard" ? "active" : ""}`}
                 onClick={() => {
-                  if (n === "Dashboard") window.location.href = "/dashboard";
-                  if (n === "Problems") window.location.href = "/problems";
-                  if (n === "Leaderboard") window.location.href = "/leaderboard";
-                  if (n === "Profile") window.location.href = "/profile";
-                }}>
+  if (n === "Dashboard") window.location.href = "/dashboard";
+  if (n === "Problems") window.location.href = "/problems";
+  if (n === "Arena") window.location.href = "/arena";
+  if (n === "Leaderboard") window.location.href = "/leaderboard";
+  if (n === "Profile") window.location.href = "/profile";
+}}>
                 {n}
               </button>
             ))}
