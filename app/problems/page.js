@@ -470,7 +470,7 @@ const diffColor = (d) => d === "EASY" ? "#22c55e" : d === "MEDIUM" ? "#f59e0b" :
             CODEARENA
           </div>
           <nav className="nav-links">
-            {["Dashboard","Problems","Arena","Leaderboard","Profile"].map((n) => (
+            {["Dashboard","Problems","Arena (Live)","Leaderboard","Profile"].map((n) => (
               <button key={n} className={`nav-link ${n === "Problems" ? "active" : ""}`}
                 onClick={() => {
             if (n === "Dashboard") window.location.href = "/dashboard";
