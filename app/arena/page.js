@@ -381,8 +381,9 @@ export default function ArenaPage() {
         .logo { display: flex; align-items: center; gap: 10px; font-family: 'Orbitron', monospace; font-size: 18px; font-weight: 900; color: #facc15; letter-spacing: 3px; cursor: pointer; }
         .logo-hex { width: 32px; height: 32px; background: rgba(250,204,21,0.15); border: 1px solid #facc15; clip-path: polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%); display: flex; align-items: center; justify-content: center; font-size: 12px; }
         .nav-links { display: flex; align-items: center; gap: 4px; }
-        .nav-link { padding: 6px 16px; font-family: 'Share Tech Mono', monospace; font-size: 11px; letter-spacing: 2px; color: rgba(255,255,255,0.35); cursor: pointer; border: none; background: none; text-transform: uppercase; font-weight: 400; }
-        .nav-link:hover, .nav-link.active { color: #facc15; }
+       .nav-link { padding: 6px 16px; font-family: 'Share Tech Mono', monospace; font-size: 11px; letter-spacing: 2px; color: rgba(255,255,255,0.35); cursor: pointer; border: none; background: none; transition: color 0.2s; text-transform: uppercase; }
+.nav-link:hover { color: rgba(250,204,21,0.7); }
+.nav-link.active { color: #facc15; }
 .avatar { width: 34px; height: 34px; background: linear-gradient(135deg, #facc15, #f59e0b); clip-path: polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #080810; cursor: pointer; font-family: 'Orbitron', monospace; }
         
         .main-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 30px; margin-top: 60px; }
