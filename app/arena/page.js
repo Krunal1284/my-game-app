@@ -435,12 +435,12 @@ export default function ArenaPage() {
           <div className="logo-hex">⬡</div>CODEARENA
         </div>
         <nav className="nav-links">
-          {["Dashboard", "Problems", "Arena", "Leaderboard", "Profile", "Settings"].map((n) => (
-            <button key={n} className={`nav-link ${n === "Arena" ? "active" : ""}`}
-              onClick={() => window.location.href = `/${n.toLowerCase()}`}>
-              {n === "Arena" ? "Arena ⚔️" : n === "Settings" ? "Settings ⚙️" : n}
-            </button>
-          ))}
+          {["Dashboard", "Problems", "Arena", "Leaderboard", "Profile"].map((n) => (
+  <button key={n} className={`nav-link ${n === "Arena" ? "active" : ""}`}
+    onClick={() => window.location.href = `/${n.toLowerCase()}`}>
+    {n}
+  </button>
+))}
         </nav>
         <div style={{fontFamily:"Share Tech Mono", color:"#facc15", cursor:"pointer"}} onClick={() => window.location.href = "/profile"}>
           {arenaStats?.username?.slice(0,2).toUpperCase() || "KG"}
