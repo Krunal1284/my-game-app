@@ -456,7 +456,7 @@ const filtered = players.filter((p) => {
 
           {/* TOP 3 PODIUM */}
           <div className="podium">
-            {[players[1] || PLAYERS[1], players[0] || PLAYERS[0], players[2] || PLAYERS[2]].map((p, i) => {
+            {[players[1] || players[0], players[0], players[2] || players[0]].filter(Boolean).map((p, i) => {
               const actualRank = p.rank;
               const colors = { 1: "#facc15", 2: "#e2e8f0", 3: "#f59e0b" };
               const color = colors[actualRank];
@@ -489,7 +489,7 @@ const filtered = players.filter((p) => {
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
               <div className="my-rank-label">YOUR RANK</div>
               <div className="my-rank-num">
-  #{players.findIndex(p => p.name === currentUser?.username) + 1 || '?'}
+  #{(() => { const idx = players.findIndex(p => p.isMe); return idx >= 0 ? idx + 1 : '?'; })()}
 </div>
             </div>
             <div className="my-rank-divider" />
