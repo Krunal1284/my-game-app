@@ -49,19 +49,20 @@ useEffect(() => {
       .order('xp', { ascending: false });
 
     if (data && data.length > 0) {
-      const ranked = data.map((user, index) => ({
-        rank: index + 1,
-        name: user.username || 'Player',
-        xp: user.xp || 0,
-        solved: user.solved || 0,
-        streak: user.streak || 0,
-        tier: user.rank || 'BRONZE',
-        badge: '◈',
-        country: '🌍',
-        change: 0,
-        isMe: false,
-      }));
-      setPlayers(ranked);
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+const ranked = data.map((user, index) => ({
+  rank: index + 1,
+  name: user.username || 'Player',
+  xp: user.xp || 0,
+  solved: user.solved || 0,
+  streak: user.streak || 0,
+  tier: user.rank || 'BRONZE',
+  badge: '◈',
+  country: '🌍',
+  change: 0,
+  isMe: user.email === authUser?.email,
+}));
+setPlayers(ranked); 
     }
 
     const { data: { user } } = await supabase.auth.getUser();
