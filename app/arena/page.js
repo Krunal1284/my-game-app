@@ -376,7 +376,7 @@ export default function ArenaPage() {
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600&display=swap');
         body { background: #080810; font-family: 'Exo 2', sans-serif; color: #e2e8f0; margin:0; }
         .arena-page { min-height: 100vh; padding: 40px; max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
-        .topbar { display: flex; align-items: center; justify-content: space-between; height: 60px; background: rgba(8,8,16,0.95); border-bottom: 1px solid rgba(250,204,21,0.12); position: sticky; top: 0; left: 0; right: 0; padding: 0 40px; z-index: 100; backdrop-filter: blur(20px); }
+        .topbar { display: flex; align-items: center; justify-content: space-between; height: 60px; background: rgba(8,8,16,0.95); border-bottom: 1px solid rgba(250,204,21,0.12); position: sticky; top: 0; padding: 0 40px; z-index: 100; backdrop-filter: blur(20px); }
         .logo { display: flex; align-items: center; gap: 10px; font-family: 'Orbitron', monospace; font-size: 18px; font-weight: 900; color: #facc15; letter-spacing: 3px; cursor: pointer; }
         .logo-hex { width: 32px; height: 32px; background: rgba(250,204,21,0.15); border: 1px solid #facc15; clip-path: polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%); display: flex; align-items: center; justify-content: center; font-size: 12px; }
         .nav-links { display: flex; align-items: center; gap: 4px; }
