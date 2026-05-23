@@ -154,9 +154,37 @@ export default function ArenaPage() {
 }, [arenaStatus]);
 
   useEffect(() => {
+  if (arenaStatus !== "searching" || !currentUser) return;
+  const poll = setInterval(async () => {
+    const { data } = await supabase
+      .from("arena_matches")
+      .select("*")
+      .or(`player1_id.eq.${currentUser.id},player2_id.eq.${currentUser.id}`)
+      .eq("status", "active")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+    if (data && !currentMatch) {
+      const targetTable = data.battle_mode === "bugfix" ? "bug_fix_problems" : "problems";
+      const { data: prob } = await supabase.from(targetTable).select("*").eq("id", data.problem_id).single();
+      setProblem(prob);
+      setPlayerCode(data.battle_mode === "bugfix" ? prob?.buggy_code || "" : "// Write your optimal solution here...");
+      const rivalName = data.player1_id === currentUser.id ? data.player2_username : data.player1_username;
+      const rivalId = data.player1_id === currentUser.id ? data.player2_id : data.player1_id;
+      setRival({ username: rivalName, id: rivalId });
+      setCurrentMatch(data);
+      setArenaStatus("found");
+      const role = data.player1_id === currentUser.id ? "player1" : "player2";
+      subscribeToMatch(data.id, role, data.battle_mode);
+    }
+  }, 3000);
+  return () => clearInterval(poll);
+}, [arenaStatus, currentUser, currentMatch]);
+
+  useEffect(() => {
     let interval;
     if (arenaStatus === "active") {
-      setBattleTimer(600); // 10 Minutes standard clock loop
+      setBattleTimer(600);
       interval = setInterval(() => {
         setBattleTimer((p) => {
           if (p <= 1) {
