@@ -610,6 +610,38 @@ export default function ArenaPage() {
           </div>
         </div>
       </div>
+    {/* MOBILE BOTTOM NAV */}
+      <nav style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0,
+        background: 'rgba(8,8,16,0.98)',
+        borderTop: '1px solid rgba(250,204,21,0.15)',
+        padding: '10px 0',
+        zIndex: 200,
+        display: 'none',
+        gridTemplateColumns: 'repeat(5, 1fr)',
+      }} className="mobile-nav">
+        {[
+          { icon: "🏠", label: "Home", link: "/dashboard" },
+          { icon: "📋", label: "Quests", link: "/problems" },
+          { icon: "⚔️", label: "Arena", link: "/arena" },
+          { icon: "🏆", label: "Board", link: "/leaderboard" },
+          { icon: "⚙️", label: "Settings", link: "/settings" },
+        ].map((item) => (
+          <button key={item.label}
+            onClick={() => window.location.href = item.link}
+            style={{
+              background: 'none', border: 'none',
+              color: item.link === '/arena' ? '#facc15' : 'rgba(250,204,21,0.5)',
+              display: 'flex', flexDirection: 'column', alignItems: 'center',
+              gap: '4px', cursor: 'pointer', padding: '4px 0', width: '100%',
+            }}>
+            <span style={{ fontSize: 18 }}>{item.icon}</span>
+            <span style={{ fontSize: 9, letterSpacing: 1, fontFamily: "'Share Tech Mono', monospace" }}>
+              {item.label}
+            </span>
+          </button>
+        ))}
+      </nav>
     </>
   );
 }
