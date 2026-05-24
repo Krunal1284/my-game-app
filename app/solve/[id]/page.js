@@ -9,6 +9,12 @@ const TEST_CASES = [
   { id: 3, input: "[[1,4],[0,4]]", expected: "[[0,4]]", status: null },
 ];
 
+const SIMILAR = [
+  { id: 3, title: "Merge Intervals", diff: "MEDIUM", xp: 280 },
+  { id: 4, title: "Binary Tree Path", diff: "HARD", xp: 500 },
+  { id: 5, title: "Trapping Rain Water", diff: "HARD", xp: 500 },
+];
+
 export default function SolvePage() {
   const [problem, setProblem] = useState(null);
   const [lang, setLang] = useState("python");
@@ -602,7 +608,7 @@ export default function SolvePage() {
               {["description", "hints", "similar"].map((t) => (
                 <button key={t} className={`ptab ${activeLeft === t ? "active" : ""}`} onClick={() => setActiveLeft(t)}>
                   {t.toUpperCase()}
-                  {t === "hints" && ` (${hintsShown}/${problem?.hints.length})`}
+                 {t === "hints" && ` (${hintsShown}/${problem?.hints?.length || 0})`}
                 </button>
               ))}
             </div>
