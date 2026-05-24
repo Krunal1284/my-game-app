@@ -37,7 +37,7 @@ const LANG_STATS = [
   { lang: "C++",        pct: 5,  color: "#8b5cf6" },
 ];
 
-export default function ProfilePage() {
+export default function Dashboard() {
     const [user, setUser] = useState(null);
   const [recent, setRecent] = useState([]);
 
