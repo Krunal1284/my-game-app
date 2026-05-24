@@ -128,13 +128,15 @@ useEffect(() => {
       .select('*')
       .order('id', { ascending: true });
     if (data && data.length > 0) {
-      const mapped = data.map(p => ({
-        ...p,
-        diff: p.difficulty,
-        tag: p.tags,
-        solved: false,
-        attempts: 1000,
-      }));
+     const mapped = data.map(p => ({
+  ...p,
+  diff: p.difficulty,
+  tag: typeof p.tags === 'string'
+    ? p.tags.split(',').map(t => t.trim())
+    : (p.tags || []),
+  solved: false,
+  attempts: 1000,
+}));
       setProblems(mapped);
     }
   };

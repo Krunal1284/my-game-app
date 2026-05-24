@@ -34,6 +34,7 @@ export default function Dashboard() {
   const [xpAnim, setXpAnim] = useState(0);
   const canvasRef = useRef(null);
   const [user, setUser] = useState(null);
+  const [recent, setRecent] = useState(RECENT);
 
     useEffect(() => {
   const getUser = async () => {

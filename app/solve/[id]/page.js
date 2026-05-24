@@ -23,9 +23,21 @@ export default function SolvePage() {
     const id = window.location.pathname.split('/').pop();
     supabase.from('problems').select('*').eq('id', id).single().then(({ data }) => {
       if (data) {
-        setProblem(data);
-        setCode(data.starter_code || '// Write your solution here');
-      } else {
+  const parsed = {
+    ...data,
+    examples: typeof data.examples === 'string'
+      ? JSON.parse(data.examples)
+      : (data.examples || []),
+    constraints: typeof data.constraints === 'string'
+      ? JSON.parse(data.constraints)
+      : (data.constraints || []),
+    hints: typeof data.hints === 'string'
+      ? JSON.parse(data.hints)
+      : (data.hints || []),
+  };
+  setProblem(parsed);
+  setCode(data.starter_code || '# Write your solution here');
+} else {
         setProblem({
           id: Number(id), title: 'Two Sum', diff: 'EASY', xp: 120,
           tags: 'Array', acceptance: '82%', submissions: 4821,
