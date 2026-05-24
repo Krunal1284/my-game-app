@@ -36,7 +36,7 @@ export default function SolvePage() {
       : (data.hints || []),
   };
   setProblem(parsed);
-  setCode(data.starter_code || '# Write your solution here');
+  setCode(String(data.starter_code || '# Write your solution here'));
 } else {
         setProblem({
           id: Number(id), title: 'Two Sum', diff: 'EASY', xp: 120,
@@ -83,7 +83,7 @@ def twoSum(nums, target):
 
   // Sync starter code when lang changes
   useEffect(() => {
-    setCode(problem?.starter_code || "// Write your solution here");
+    setCode(String(problem?.starter_code || "// Write your solution here"));
   }, [lang]);
 
   // Canvas hex bg
