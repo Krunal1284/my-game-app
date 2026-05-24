@@ -127,6 +127,16 @@ useEffect(() => {
       .from('problems')
       .select('*')
       .order('id', { ascending: true });
+    const { data: { user } } = await supabase.auth.getUser();
+    let solvedIds = [];
+    if (user) {
+      const { data: subs } = await supabase
+        .from('submissions')
+        .select('problem_id')
+        .eq('user_id', user.id)
+        .eq('status', 'ACCEPTED');
+      if (subs) solvedIds = subs.map(s => s.problem_id);
+    }
     if (data && data.length > 0) {
      const mapped = data.map(p => ({
   ...p,
@@ -134,7 +144,7 @@ useEffect(() => {
   tag: typeof p.tags === 'string'
     ? p.tags.split(',').map(t => t.trim())
     : (p.tags || []),
-  solved: false,
+  solved: solvedIds.includes(p.id),
   attempts: 1000,
 }));
       setProblems(mapped);
