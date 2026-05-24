@@ -750,7 +750,7 @@ def twoSum(nums, target):
                   <span className="editor-label">// CODE EDITOR · {lang.toUpperCase()}</span>
                 </div>
                 <div style={{ display: "flex", gap: 4 }}>
-                  <button className="toolbar-action" onClick={() => setCode(problem?.starter_code || "// Write your solution here")}>RESET</button>
+                  <button className="toolbar-action" onClick={() => setCode(String(problem?.starter_code || "// Write your solution here"))}>RESET</button>
                   <button className="toolbar-action">FORMAT</button>
                   <button className="toolbar-action">FULLSCREEN</button>
                 </div>
