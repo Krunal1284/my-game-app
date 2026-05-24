@@ -5,8 +5,8 @@ import { useState, useEffect, useRef } from "react";
 import { updateStreak } from '@/lib/streak';
 
 const QUESTS = [
-  { id: 1, title: "Two Sum", tag: "ARRAY", xp: 120, diff: "EASY", done: true },
-  { id: 2, title: "Longest Substring", tag: "SLIDING WINDOW", xp: 280, diff: "MEDIUM", done: true },
+  { id: 1, title: "Two Sum", tag: "ARRAY", xp: 120, diff: "EASY", done: false },
+  { id: 2, title: "Longest Substring", tag: "SLIDING WINDOW", xp: 280, diff: "MEDIUM", done: false },
   { id: 3, title: "Merge Intervals", tag: "SORTING", xp: 280, diff: "MEDIUM", done: false },
   { id: 4, title: "Binary Tree Path", tag: "TREE", xp: 500, diff: "HARD", done: false },
   { id: 5, title: "Trapping Rain Water", tag: "DP", xp: 500, diff: "HARD", done: false },
@@ -35,42 +35,41 @@ export default function Dashboard() {
   const canvasRef = useRef(null);
   const [user, setUser] = useState(null);
 
-    useEffect(() => {
-  const getUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      window.location.href = '/login';
-      return;
-    }
-    
-    // ← ADD THIS LINE to clean the URL
-    if (window.location.hash) window.history.replaceState(null, '', '/dashboard');
-    
-    await updateStreak(user.email);
-    let { data } = await supabase
-      .from('users')
-      .select('*')
-      .eq('email', user.email)
-      .single();
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        window.location.href = '/login';
+        return;
+      }
 
-    if (!data) {
-      const username = user.user_metadata?.full_name?.split(' ')[0] || user.email.split('@')[0];
-      await supabase.from('users').insert({
-        id: user.id,
-        email: user.email,
-        username,
-        xp: 0, level: 1, streak: 0, solved: 0, rank: 'BRONZE'
-      });
-      data = { username, xp: 0, level: 1, streak: 0, solved: 0, rank: 'BRONZE' };
-    } else if (!data.username) {
-      const username = user.email.split('@')[0];
-      await supabase.from('users').update({ username }).eq('email', user.email);
-      data = { ...data, username };
-    }
-    setUser(data);
-  };
-  getUser();
-}, []);
+      if (window.location.hash) window.history.replaceState(null, '', '/dashboard');
+
+      await updateStreak(user.email);
+      let { data } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', user.email)
+        .single();
+
+      if (!data) {
+        const username = user.user_metadata?.full_name?.split(' ')[0] || user.email.split('@')[0].replace(/[0-9]/g, '').split('.')[0] || 'Player';
+        await supabase.from('users').insert({
+          id: user.id,
+          email: user.email,
+          username,
+          xp: 0, level: 1, streak: 0, solved: 0, rank: 'BRONZE'
+        });
+        data = { username, xp: 0, level: 1, streak: 0, solved: 0, rank: 'BRONZE' };
+      } else if (!data.username) {
+        const username = user.email.split('@')[0];
+        await supabase.from('users').update({ username }).eq('email', user.email);
+        data = { ...data, username };
+      }
+      setUser(data);
+    };
+    getUser();
+  }, []);
 
   useEffect(() => {
     const t = setInterval(() => {
@@ -85,7 +84,6 @@ export default function Dashboard() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Canvas background
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -93,7 +91,6 @@ export default function Dashboard() {
     let width = (canvas.width = window.innerWidth);
     let height = (canvas.height = window.innerHeight);
 
-    // Hex grid
     const hexSize = 40;
     const hexes = [];
     for (let row = 0; row < height / (hexSize * 1.5) + 2; row++) {
@@ -141,6 +138,31 @@ export default function Dashboard() {
 
   const diffColor = (d) => d === "EASY" ? "#22c55e" : d === "MEDIUM" ? "#f59e0b" : "#ef4444";
 
+  // FIX: stat change labels based on actual user data instead of always hardcoded
+  const statCards = [
+    {
+      icon: "🗡️",
+      val: user?.solved || 0,
+      lbl: "Quests Solved",
+      change: user?.solved > 0 ? `+${user.solved} total` : "Start solving!",
+      bg: "🗡️"
+    },
+    {
+      icon: "🔥",
+      val: user?.streak || 0,
+      lbl: "Day Streak",
+      change: user?.streak > 0 ? "Keep it up!" : "Start your streak!",
+      bg: "🔥"
+    },
+    {
+      icon: "⚡",
+      val: user?.xp || 0,
+      lbl: "Total XP",
+      change: user?.xp > 0 ? `${user.xp} XP earned` : "Earn your first XP!",
+      bg: "⚡"
+    },
+  ];
+
   return (
     <>
       <style>{`
@@ -165,7 +187,6 @@ export default function Dashboard() {
           z-index: 0;
         }
 
-        /* Gradient overlay */
         .bg-overlay {
           position: fixed;
           inset: 0;
@@ -177,74 +198,73 @@ export default function Dashboard() {
         }
 
         .layout {
-  position: relative;
-  z-index: 1;
-  min-height: 100vh;
-  display: grid;
-  grid-template-columns: 220px 1fr;
-  grid-template-rows: auto 1fr;
-}
+          position: relative;
+          z-index: 1;
+          min-height: 100vh;
+          display: grid;
+          grid-template-columns: 220px 1fr;
+          grid-template-rows: auto 1fr;
+        }
 
-.mobile-nav {
-  display: none;
-}
+        .mobile-nav {
+          display: none;
+        }
 
-@media (max-width: 768px) {
-  .layout {
-    grid-template-columns: 1fr;
-  }
-    .mobile-nav {
-    display: grid !important;
-  }
-  .main {
-    padding-bottom: 80px !important;
-  }
-  .sidebar {
-    display: none !important;
-  }
-  .topbar {
-    padding: 0 12px;
-    overflow: hidden;
-  }
-  .topbar-center { /* desktop only */
-     display: none !important;
-  }
-  .topbar-right .notif-btn {
-    display: none !important;
-  }
-  .main {
-    padding: 12px;
-    overflow-x: hidden;
-  }
-  .grid2 {
-    grid-template-columns: 1fr !important;
-  }
-  .grid3 {
-    grid-template-columns: 1fr !important;
-  }
-  .hero {
-    padding: 16px;
-    clip-path: none !important;
-  }
-  .hero-title {
-    font-size: 16px !important;
-  }
-  .hero-stats {
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-  .daily-btn {
-    display: none !important;
-  }
-  .hero-stat-val {
-    font-size: 16px !important;
-  }
-  body {
-    overflow-x: hidden;
-  }
-}
+        @media (max-width: 768px) {
+          .layout {
+            grid-template-columns: 1fr;
+          }
+          .mobile-nav {
+            display: grid !important;
+          }
+          .main {
+            padding-bottom: 80px !important;
+          }
+          .sidebar {
+            display: none !important;
+          }
+          .topbar {
+            padding: 0 12px;
+            overflow: hidden;
+          }
+          .topbar-center {
+            display: none !important;
+          }
+          .topbar-right .notif-btn {
+            display: none !important;
+          }
+          .main {
+            padding: 12px;
+            overflow-x: hidden;
+          }
+          .grid2 {
+            grid-template-columns: 1fr !important;
+          }
+          .grid3 {
+            grid-template-columns: 1fr !important;
+          }
+          .hero {
+            padding: 16px;
+            clip-path: none !important;
+          }
+          .hero-title {
+            font-size: 16px !important;
+          }
+          .hero-stats {
+            gap: 8px;
+            flex-wrap: wrap;
+          }
+          .daily-btn {
+            display: none !important;
+          }
+          .hero-stat-val {
+            font-size: 16px !important;
+          }
+          body {
+            overflow-x: hidden;
+          }
+        }
 
-        /* ── TOPBAR ── */
         .topbar {
           grid-column: 1 / -1;
           display: flex;
@@ -282,7 +302,7 @@ export default function Dashboard() {
           font-size: 12px;
         }
 
-        .topbar-center { /* desktop only */
+        .topbar-center {
           display: flex;
           align-items: center;
           gap: 24px;
@@ -352,7 +372,6 @@ export default function Dashboard() {
           font-family: 'Orbitron', monospace;
         }
 
-        /* ── SIDEBAR ── */
         .sidebar {
           background: rgba(8,8,16,0.7);
           border-right: 1px solid rgba(250,204,21,0.08);
@@ -412,7 +431,6 @@ export default function Dashboard() {
           font-family: 'Share Tech Mono', monospace;
         }
 
-        /* Player card in sidebar */
         .player-card {
           margin: 0 12px 24px;
           padding: 16px;
@@ -475,14 +493,12 @@ export default function Dashboard() {
         .rank-color { width: 8px; height: 8px; background: #facc15; clip-path: polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%); }
         .rank-name { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: #facc15; letter-spacing: 2px; }
 
-        /* ── MAIN CONTENT ── */
         .main {
           padding: 28px 32px;
           overflow-y: auto;
           max-height: calc(100vh - 60px);
         }
 
-        /* Welcome hero */
         .hero {
           margin-bottom: 28px;
           padding: 28px 32px;
@@ -568,7 +584,6 @@ export default function Dashboard() {
           cursor: pointer;
           clip-path: polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px));
           transition: all 0.25s;
-          position: relative;
           overflow: hidden;
         }
         .daily-btn::before {
@@ -585,7 +600,6 @@ export default function Dashboard() {
         .daily-btn:hover { color: #080810; }
         .daily-btn span { position: relative; z-index: 1; }
 
-        /* Grid layout */
         .grid2 {
           display: grid;
           grid-template-columns: 1fr 320px;
@@ -601,7 +615,6 @@ export default function Dashboard() {
           animation: fadeUp 0.5s 0.05s ease both;
         }
 
-        /* Cards */
         .card {
           background: rgba(8,8,16,0.8);
           border: 1px solid rgba(250,204,21,0.1);
@@ -636,7 +649,6 @@ export default function Dashboard() {
         }
         .card-action:hover { color: #facc15; }
 
-        /* Stat cards */
         .stat-card {
           padding: 20px;
           background: rgba(8,8,16,0.8);
@@ -680,7 +692,6 @@ export default function Dashboard() {
           line-height: 1;
         }
 
-        /* Quest list */
         .quest-item {
           display: flex;
           align-items: center;
@@ -742,7 +753,6 @@ export default function Dashboard() {
           text-align: right;
         }
 
-        /* Leaderboard */
         .lb-item {
           display: flex;
           align-items: center;
@@ -788,7 +798,6 @@ export default function Dashboard() {
           font-weight: 600;
         }
 
-        /* Badges */
         .badges-grid {
           display: grid;
           grid-template-columns: repeat(6,1fr);
@@ -815,7 +824,6 @@ export default function Dashboard() {
         .badge-lbl { font-size: 9px; color: rgba(255,255,255,0.3); text-align: center; letter-spacing: 0.5px; font-family: 'Share Tech Mono', monospace; }
         .badge-lbl.earned { color: rgba(250,204,21,0.6); }
 
-        /* Tabs */
         .tabs {
           display: flex;
           border-bottom: 1px solid rgba(250,204,21,0.08);
@@ -842,7 +850,6 @@ export default function Dashboard() {
         }
         .tab:hover { color: rgba(250,204,21,0.6); }
 
-        /* Progress ring */
         .progress-ring { display: flex; align-items: center; gap: 20px; padding: 20px; }
         .ring-wrap { position: relative; width: 80px; height: 80px; flex-shrink: 0; }
         .ring-wrap svg { transform: rotate(-90deg); }
@@ -870,7 +877,6 @@ export default function Dashboard() {
       <div className="bg-overlay" />
 
       <div className="layout" style={{maxWidth:'100vw', overflowX:'hidden'}}>
-        {/* ── TOPBAR ── */}
         <header className="topbar" style={{overflow:'hidden'}}>
           <div className="logo">
             <div className="logo-hex">⬡</div>
@@ -888,17 +894,17 @@ export default function Dashboard() {
           <div className="topbar-right">
             <button className="notif-btn">⚡</button>
             <button className="notif-btn">◈</button>
-            <div className="avatar" onClick={() => supabase.auth.signOut().then(() => window.location.href = '/login')} style={{cursor:'pointer'}}>{user?.username?.slice(0,2).toUpperCase() || 'KG'}</div>          </div>
+            <div className="avatar" onClick={() => supabase.auth.signOut().then(() => window.location.href = '/login')} style={{cursor:'pointer'}}>{user?.username?.slice(0,2).toUpperCase() || 'KG'}</div>
+          </div>
         </header>
 
-        {/* ── SIDEBAR ── */}
         <aside className="sidebar">
           <div className="player-card">
             <div className="player-name">{user?.username || 'Player'}</div>
             <div className="player-title">{user?.rank || 'BRONZE'} TIER CODER</div>
             <div className="xp-row">
-            <span className="xp-text">LVL {user?.level || 1}</span>
-             <span className="xp-text">{user?.xp || 0} XP</span>
+              <span className="xp-text">LVL {user?.level || 1}</span>
+              <span className="xp-text">{user?.xp || 0} XP</span>
             </div>
             <div className="xp-bar">
               <div className="xp-fill" style={{ width: `${xpAnim}%` }} />
@@ -912,42 +918,40 @@ export default function Dashboard() {
           <div className="nav-section">
             <div className="nav-label">NAVIGATE</div>
             {[
-             { icon: "🏠", label: "Home", link: "/dashboard" },
-            { icon: "📋", label: "Quests", link: "/problems" },
-            { icon: "⚔️", label: "Arena", link: "/arena" },
-            { icon: "🏆", label: "Board", link: "/leaderboard" },
-            { icon: "⚙️", label: "Settings", link: "/settings" },
+              { icon: "🏠", label: "Home", link: "/dashboard" },
+              { icon: "📋", label: "Quests", link: "/problems" },
+              { icon: "⚔️", label: "Arena", link: "/arena" },
+              { icon: "🏆", label: "Board", link: "/leaderboard" },
+              { icon: "⚙️", label: "Settings", link: "/settings" },
             ].map((item) => (
-             <button key={item.label}
-                 className={`nav-item ${item.active ? "active" : ""}`}
-                 onClick={() => item.link && (window.location.href = item.link)}>
-                  <span className="nav-icon">{item.icon}</span>
-                 {item.label}
-                 {item.count && <span className="nav-count">{item.count}</span>}
-            </button>
+              <button key={item.label}
+                className={`nav-item ${item.active ? "active" : ""}`}
+                onClick={() => item.link && (window.location.href = item.link)}>
+                <span className="nav-icon">{item.icon}</span>
+                {item.label}
+                {item.count && <span className="nav-count">{item.count}</span>}
+              </button>
             ))}
           </div>
 
           <div className="nav-section">
             <div className="nav-label">PLAYER</div>
             {[
-             { icon: "👤", label: "My Profile", link: "/profile" },
-            { icon: "📋", label: "Submissions", link: "/problems" },
-            { icon: "⚙️", label: "Settings", link: "/settings" },
+              { icon: "👤", label: "My Profile", link: "/profile" },
+              { icon: "📋", label: "Submissions", link: "/problems" },
+              { icon: "⚙️", label: "Settings", link: "/settings" },
             ].map((item) => (
-             <button key={item.label} className="nav-item"
-             onClick={() => item.link && (window.location.href = item.link)}>
-            <span className="nav-icon">{item.icon}</span>
-             {item.label}
-            </button>
+              <button key={item.label} className="nav-item"
+                onClick={() => item.link && (window.location.href = item.link)}>
+                <span className="nav-icon">{item.icon}</span>
+                {item.label}
+              </button>
             ))}
           </div>
         </aside>
 
-        {/* ── MAIN ── */}
         <main className="main">
 
-          {/* Hero */}
           <div className="hero" style={{ marginBottom: 24 }}>
             <div className="hero-tag">WELCOME BACK, PLAYER</div>
             <div className="hero-title">
@@ -956,7 +960,7 @@ export default function Dashboard() {
             <div className="hero-sub">You're 3 problems away from reaching Platinum tier</div>
             <div className="hero-stats">
               <div className="hero-stat">
-               <span className="hero-stat-val">{user?.streak || 0}</span>
+                <span className="hero-stat-val">{user?.streak || 0}</span>
                 <span className="hero-stat-lbl">Day Streak</span>
               </div>
               <div className="hero-divider" />
@@ -980,13 +984,9 @@ export default function Dashboard() {
             </button>
           </div>
 
-          {/* Stat cards */}
+          {/* FIX: using statCards array with dynamic change labels */}
           <div className="grid3">
-            {[
-             { icon: "🗡️", val: user?.solved || 0, lbl: "Quests Solved", change: "+3 this week", bg: "🗡️" },
-            { icon: "🔥", val: user?.streak || 0, lbl: "Day Streak", change: "Personal best!", bg: "🔥" },
-            { icon: "⚡", val: user?.xp || 0, lbl: "Total XP", change: "+1,200 today", bg: "⚡" },
-            ].map((s) => (
+            {statCards.map((s) => (
               <div key={s.lbl} className="stat-card">
                 <div className="stat-card-icon">{s.icon}</div>
                 <div className="stat-card-val">{s.val}</div>
@@ -997,9 +997,7 @@ export default function Dashboard() {
             ))}
           </div>
 
-          {/* Main grid */}
           <div className="grid2">
-            {/* Left: Quests */}
             <div className="card">
               <div className="card-header">
                 <div className="card-title">
@@ -1032,10 +1030,8 @@ export default function Dashboard() {
               ))}
             </div>
 
-            {/* Right col */}
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
-              {/* Progress */}
               <div className="card">
                 <div className="card-header">
                   <div className="card-title"><div className="card-title-dot" />Progress</div>
@@ -1072,7 +1068,6 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* Leaderboard */}
               <div className="card">
                 <div className="card-header">
                   <div className="card-title"><div className="card-title-dot" />Top Players</div>
@@ -1093,7 +1088,6 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Badges */}
           <div className="card animate-in">
             <div className="card-header">
               <div className="card-title"><div className="card-title-dot" />Achievement Badges</div>
@@ -1112,7 +1106,6 @@ export default function Dashboard() {
         </main>
       </div>
 
-      {/* MOBILE BOTTOM NAV */}
       <nav style={{
         position: 'fixed', bottom: 0, left: 0, right: 0,
         background: 'rgba(8,8,16,0.98)',
@@ -1123,11 +1116,11 @@ export default function Dashboard() {
         gap: 0,
       }} className="mobile-nav">
         {[
-        { icon: "🏠", label: "Dashboard", active: true, link: "/dashboard" },
-        { icon: "📋", label: "Quests", count: "247", link: "/problems" },
-       { icon: "⚔️", label: "Arena", link: "/arena" },
-        { icon: "🏆", label: "Board", link: "/leaderboard" },
-        { icon: "⚙️", label: "Settings", link: "/settings" },
+          { icon: "🏠", label: "Dashboard", active: true, link: "/dashboard" },
+          { icon: "📋", label: "Quests", count: "247", link: "/problems" },
+          { icon: "⚔️", label: "Arena", link: "/arena" },
+          { icon: "🏆", label: "Board", link: "/leaderboard" },
+          { icon: "⚙️", label: "Settings", link: "/settings" },
         ].map((item) => (
           <button key={item.label}
             onClick={() => window.location.href = item.link}

@@ -21,7 +21,6 @@ const RECENT = [
   { id: 6,  title: "3Sum",                diff: "MEDIUM", xp: 0,    time: "—",       status: "FAILED",   date: "3 days ago" },
 ];
 
-// 1. Change this to an empty array so the server renders a uniform base structure safely
 const INITIAL_HEATMAP = Array.from({ length: 52 * 7 }, () => ({ val: 0 }));
 
 const STATS_BREAKDOWN = [
@@ -38,42 +37,41 @@ const LANG_STATS = [
 ];
 
 export default function ProfilePage() {
-    const [user, setUser] = useState(null);
-
-useEffect(() => {
-  const getUser = async () => {
-    const { data: { user: authUser } } = await supabase.auth.getUser();
-    if (!authUser) {
-      window.location.href = '/login';
-      return;
-    }
-    const [recent, setRecent] = useState(RECENT);
-    const { data: submissions } = await supabase
-  .from('submissions')
-  .select('*')
-  .eq('user_id', authUser.id)
-  .order('created_at', { ascending: false })
-  .limit(6);
-if (submissions) setRecent(submissions);
-    const { data } = await supabase
-      .from('users')
-      .select('*')
-      .eq('email', authUser.email)
-      .single();
-    setUser(data);
-  };
-  getUser();
-}, []);
+  const [user, setUser] = useState(null);
+  const [recent, setRecent] = useState(RECENT); // FIX: moved out of useEffect/getUser
   const [activeTab, setActiveTab] = useState("overview");
   const [loaded, setLoaded] = useState(false);
-  // 2. Control heatmap values inside a state hook
   const [heatmapData, setHeatmapData] = useState(INITIAL_HEATMAP);
   const canvasRef = useRef(null);
 
-  useEffect(() => { 
-    setTimeout(() => setLoaded(true), 100); 
-    
-    // 3. Generate random values ONLY on the client after the component mounts
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) {
+        window.location.href = '/login';
+        return;
+      }
+      // FIX: removed useState call from here, now just calling setRecent directly
+      const { data: submissions } = await supabase
+        .from('submissions')
+        .select('*')
+        .eq('user_id', authUser.id)
+        .order('created_at', { ascending: false })
+        .limit(6);
+      if (submissions) setRecent(submissions);
+
+      const { data } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', authUser.email)
+        .single();
+      setUser(data);
+    };
+    getUser();
+  }, []);
+
+  useEffect(() => {
+    setTimeout(() => setLoaded(true), 100);
     const clientHeatmap = Array.from({ length: 52 * 7 }, () => ({
       val: Math.random() > 0.6 ? Math.floor(Math.random() * 4) + 1 : 0,
     }));
@@ -136,7 +134,6 @@ if (submissions) setRecent(submissions);
         }
         .page { position: relative; z-index: 1; min-height: 100vh; overflow-x: hidden; }
 
-        /* TOPBAR */
         .topbar {
           display: flex; align-items: center; justify-content: space-between;
           padding: 0 40px; height: 60px;
@@ -151,10 +148,8 @@ if (submissions) setRecent(submissions);
         .nav-link.active { color: #facc15; }
         .avatar { width: 34px; height: 34px; background: linear-gradient(135deg, #facc15, #f59e0b); clip-path: polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #080810; cursor: pointer; font-family: 'Orbitron', monospace; }
 
-        /* MAIN */
         .main { max-width: 1100px; margin: 0 auto; padding: 36px 40px; overflow-x: hidden; }
 
-        /* PROFILE HERO */
         .profile-hero {
           display: grid; grid-template-columns: auto 1fr auto;
           gap: 28px; align-items: center;
@@ -220,7 +215,6 @@ if (submissions) setRecent(submissions);
         }
         .share-btn:hover { color: rgba(255,255,255,0.5); border-color: rgba(255,255,255,0.2); }
 
-        /* QUICK STATS ROW */
         .quick-stats {
           display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 24px;
           opacity: ${loaded ? 1 : 0}; transform: translateY(${loaded ? 0 : 12}px);
@@ -237,7 +231,6 @@ if (submissions) setRecent(submissions);
         .qs-val { font-family: 'Orbitron', monospace; font-size: 22px; font-weight: 700; color: #facc15; line-height: 1; margin-bottom: 4px; }
         .qs-lbl { font-family: 'Share Tech Mono', monospace; font-size: 9px; color: rgba(255,255,255,0.3); letter-spacing: 2px; }
 
-        /* TABS */
         .tabs-row {
           display: flex; border-bottom: 1px solid rgba(250,204,21,0.08); margin-bottom: 24px;
           opacity: ${loaded ? 1 : 0}; transition: all 0.6s 0.15s ease;
@@ -251,7 +244,6 @@ if (submissions) setRecent(submissions);
         .tab.active::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 1px; background: #facc15; }
         .tab:hover { color: rgba(250,204,21,0.6); }
 
-        /* CONTENT GRID */
         .content-grid {
           display: grid; grid-template-columns: 1fr 300px; gap: 20px;
           opacity: ${loaded ? 1 : 0}; transform: translateY(${loaded ? 0 : 10}px);
@@ -260,7 +252,6 @@ if (submissions) setRecent(submissions);
         .content-left { display: flex; flex-direction: column; gap: 20px; }
         .content-right { display: flex; flex-direction: column; gap: 20px; }
 
-        /* CARD */
         .card { background: rgba(8,8,16,0.85); border: 1px solid rgba(250,204,21,0.1); backdrop-filter: blur(10px); }
         .card-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid rgba(250,204,21,0.07); }
         .card-title { font-family: 'Share Tech Mono', monospace; font-size: 10px; letter-spacing: 3px; color: rgba(250,204,21,0.5); display: flex; align-items: center; gap: 8px; }
@@ -268,7 +259,6 @@ if (submissions) setRecent(submissions);
         .card-action { font-family: 'Share Tech Mono', monospace; font-size: 9px; color: rgba(250,204,21,0.3); cursor: pointer; background: none; border: none; letter-spacing: 2px; transition: color 0.2s; }
         .card-action:hover { color: #facc15; }
 
-        /* HEATMAP */
         .heatmap-wrap { padding: 16px 20px 20px; overflow-x: auto; }
         .heatmap-grid { display: grid; grid-template-columns: repeat(52, 10px); grid-template-rows: repeat(7, 10px); gap: 2px; width: fit-content; }
         .heatmap-cell { width: 10px; height: 10px; border-radius: 1px; transition: transform 0.1s; cursor: pointer; }
@@ -276,7 +266,6 @@ if (submissions) setRecent(submissions);
         .heatmap-legend { display: flex; align-items: center; gap: 6px; margin-top: 10px; font-family: 'Share Tech Mono', monospace; font-size: 9px; color: rgba(255,255,255,0.2); letter-spacing: 1px; }
         .legend-cell { width: 10px; height: 10px; border-radius: 1px; }
 
-        /* PROBLEM BREAKDOWN */
         .breakdown-wrap { padding: 16px 20px 20px; }
         .breakdown-row { margin-bottom: 14px; }
         .breakdown-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
@@ -287,7 +276,6 @@ if (submissions) setRecent(submissions);
         .breakdown-fill::after { content: ''; position: absolute; right: -10px; top: 0; width: 20px; height: 100%; background: linear-gradient(90deg,transparent,rgba(255,255,255,0.4),transparent); animation: shimmer 2s infinite; }
         @keyframes shimmer { 0%{transform:translateX(-20px)} 100%{transform:translateX(20px)} }
 
-        /* RECENT SUBMISSIONS */
         .submission-item {
           display: flex; align-items: center; gap: 14px;
           padding: 12px 20px; border-bottom: 1px solid rgba(250,204,21,0.05);
@@ -305,7 +293,6 @@ if (submissions) setRecent(submissions);
         .sub-xp { font-family: 'Orbitron', monospace; font-size: 11px; color: #facc15; font-weight: 600; min-width: 40px; text-align: right; }
         .sub-xp.zero { color: rgba(255,255,255,0.2); }
 
-        /* BADGES */
         .badges-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 16px 20px 20px; }
         .badge-item { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; position: relative; }
         .badge-hex { width: 52px; height: 52px; clip-path: polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%); display: flex; align-items: center; justify-content: center; font-size: 20px; transition: transform 0.2s; }
@@ -316,7 +303,6 @@ if (submissions) setRecent(submissions);
         .badge-lbl.earned { color: rgba(250,204,21,0.6); }
         .badge-lbl.locked { color: rgba(255,255,255,0.2); }
 
-        /* LANG STATS */
         .lang-wrap { padding: 16px 20px 20px; }
         .lang-row { margin-bottom: 12px; }
         .lang-header { display: flex; justify-content: space-between; margin-bottom: 5px; }
@@ -325,7 +311,6 @@ if (submissions) setRecent(submissions);
         .lang-bar { height: 4px; background: rgba(255,255,255,0.04); overflow: hidden; }
         .lang-fill { height: 100%; transition: width 1.2s cubic-bezier(0.4,0,0.2,1); }
 
-        /* RANK PROGRESS */
         .rank-progress-wrap { padding: 16px 20px 20px; }
         .rank-current { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
         .rank-hex { width: 48px; height: 48px; clip-path: polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%); background: rgba(250,204,21,0.12); border: 1px solid rgba(250,204,21,0.3); display: flex; align-items: center; justify-content: center; font-size: 20px; }
@@ -339,37 +324,36 @@ if (submissions) setRecent(submissions);
         .rank-next { font-family: 'Share Tech Mono', monospace; font-size: 9px; color: rgba(255,255,255,0.25); letter-spacing: 2px; text-align: right; }
 
         @media (max-width: 768px) {
-  .topbar { padding: 0 16px; }
-  .nav-links { display: none; }
-  .main { padding: 16px; overflow-x: hidden; }
-  .profile-hero { display: flex; flex-direction: column; gap: 12px; padding: 20px 16px; clip-path: none; }
-  .profile-right { display: none; }
-  .profile-avatar { width: 64px; height: 64px; font-size: 20px; }
-  .profile-name { font-size: 18px; }
-  .profile-chips { gap: 6px; }
-  .profile-chip { font-size: 8px; padding: 3px 8px; }
-  .quick-stats { grid-template-columns: repeat(2, 1fr); gap: 8px; }
-  .quick-stats > :last-child { grid-column: span 2; }
-  .qs-val { font-size: 18px; }
-  .tabs-row { overflow-x: auto; }
-  .tab { padding: 10px 14px; font-size: 9px; white-space: nowrap; }
-  .content-grid { grid-template-columns: 1fr; }
-  .content-right { order: -1; width: 100%; overflow: hidden; }
-  .content-left { width: 100%; overflow: hidden; }
-  .card { width: 100%; overflow: hidden; }
-  .breakdown-bar { max-width: 100%; overflow: hidden; }
-  .breakdown-fill { max-width: 100%; }
-  .rank-bar { max-width: 100%; overflow: hidden; }
-  .rank-fill { max-width: 100%; }
-  .heatmap-wrap { overflow-x: auto; }
-  .badges-grid { grid-template-columns: repeat(3, 1fr); }
-}
+          .topbar { padding: 0 16px; }
+          .nav-links { display: none; }
+          .main { padding: 16px; overflow-x: hidden; }
+          .profile-hero { display: flex; flex-direction: column; gap: 12px; padding: 20px 16px; clip-path: none; }
+          .profile-right { display: none; }
+          .profile-avatar { width: 64px; height: 64px; font-size: 20px; }
+          .profile-name { font-size: 18px; }
+          .profile-chips { gap: 6px; }
+          .profile-chip { font-size: 8px; padding: 3px 8px; }
+          .quick-stats { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+          .quick-stats > :last-child { grid-column: span 2; }
+          .qs-val { font-size: 18px; }
+          .tabs-row { overflow-x: auto; }
+          .tab { padding: 10px 14px; font-size: 9px; white-space: nowrap; }
+          .content-grid { grid-template-columns: 1fr; }
+          .content-right { order: -1; width: 100%; overflow: hidden; }
+          .content-left { width: 100%; overflow: hidden; }
+          .card { width: 100%; overflow: hidden; }
+          .breakdown-bar { max-width: 100%; overflow: hidden; }
+          .breakdown-fill { max-width: 100%; }
+          .rank-bar { max-width: 100%; overflow: hidden; }
+          .rank-fill { max-width: 100%; }
+          .heatmap-wrap { overflow-x: auto; }
+          .badges-grid { grid-template-columns: repeat(3, 1fr); }
+        }
       `}</style>
       <canvas ref={canvasRef} />
       <div className="bg-overlay" />
 
       <div className="page">
-        {/* TOPBAR */}
         <header className="topbar">
           <div className="logo" onClick={() => window.location.href = "/dashboard"}>
             <div className="logo-hex">⬡</div>
@@ -377,20 +361,16 @@ if (submissions) setRecent(submissions);
           </div>
           <nav className="nav-links">
             {["Dashboard", "Problems", "Arena", "Leaderboard", "Profile"].map((n) => (
-  <button key={n} className={`nav-link ${n === "Profile" ? "active" : ""}`}
-    onClick={() => {
-      window.location.href = `/${n.toLowerCase()}`;
-    }}>
-    {n}
-  </button>
-))}
+              <button key={n} className={`nav-link ${n === "Profile" ? "active" : ""}`}
+                onClick={() => { window.location.href = `/${n.toLowerCase()}`; }}>
+                {n}
+              </button>
+            ))}
           </nav>
-          <div className="avatar" onClick={() => window.location.href = "/settings"}>{user?.username?.slice(0,2).toUpperCase() || 'KG'}</div> 
+          <div className="avatar" onClick={() => window.location.href = "/settings"}>{user?.username?.slice(0,2).toUpperCase() || 'KG'}</div>
         </header>
 
         <main className="main">
-
-          {/* PROFILE HERO */}
           <div className="profile-hero">
             <div className="profile-avatar-wrap">
               <div className="avatar-glow" />
@@ -400,7 +380,7 @@ if (submissions) setRecent(submissions);
 
             <div className="profile-info">
               <div className="profile-tag">PLAYER PROFILE</div>
-             <div className="profile-name">{user?.username || 'Player'}</div>
+              <div className="profile-name">{user?.username || 'Player'}</div>
               <div className="profile-title">{user?.rank || 'BRONZE'} TIER CODER · SEASON 4</div>
               <div className="profile-chips">
                 <div className="profile-chip gold">🥇 GOLD II</div>
@@ -417,7 +397,6 @@ if (submissions) setRecent(submissions);
             </div>
           </div>
 
-        {/* QUICK STATS */}
           <div className="quick-stats">
             {[
               { val: user?.solved || 0, lbl: "PROBLEMS SOLVED" },
@@ -441,11 +420,9 @@ if (submissions) setRecent(submissions);
             ))}
           </div>
 
-          {/* CONTENT */}
           <div className="content-grid">
             <div className="content-left">
 
-              {/* HEATMAP */}
               {(activeTab === "overview" || activeTab === "submissions") && (
                 <div className="card">
                   <div className="card-header">
@@ -454,7 +431,6 @@ if (submissions) setRecent(submissions);
                   </div>
                   <div className="heatmap-wrap">
                     <div className="heatmap-grid">
-                      {/* 4. Use your client-side map array here */}
                       {heatmapData.map((cell, i) => (
                         <div key={i} className="heatmap-cell" style={{
                           background: cell.val === 0 ? "rgba(255,255,255,0.04)"
@@ -482,7 +458,6 @@ if (submissions) setRecent(submissions);
                 </div>
               )}
 
-              {/* RECENT SUBMISSIONS */}
               {(activeTab === "overview" || activeTab === "submissions") && (
                 <div className="card">
                   <div className="card-header">
@@ -503,7 +478,6 @@ if (submissions) setRecent(submissions);
                 </div>
               )}
 
-              {/* BADGES TAB */}
               {activeTab === "badges" && (
                 <div className="card">
                   <div className="card-header">
@@ -524,10 +498,8 @@ if (submissions) setRecent(submissions);
 
             </div>
 
-            {/* RIGHT COLUMN */}
             <div className="content-right">
 
-              {/* PROBLEM BREAKDOWN */}
               <div className="card">
                 <div className="card-header">
                   <div className="card-title"><div className="card-dot" />Problem Breakdown</div>
@@ -547,7 +519,6 @@ if (submissions) setRecent(submissions);
                 </div>
               </div>
 
-              {/* RANK PROGRESS */}
               <div className="card">
                 <div className="card-header">
                   <div className="card-title"><div className="card-dot" />Rank Progress</div>
@@ -571,7 +542,6 @@ if (submissions) setRecent(submissions);
                 </div>
               </div>
 
-              {/* LANGUAGE STATS */}
               <div className="card">
                 <div className="card-header">
                   <div className="card-title"><div className="card-dot" />Languages Used</div>
@@ -591,7 +561,6 @@ if (submissions) setRecent(submissions);
                 </div>
               </div>
 
-              {/* BADGES MINI */}
               {activeTab === "overview" && (
                 <div className="card">
                   <div className="card-header">
