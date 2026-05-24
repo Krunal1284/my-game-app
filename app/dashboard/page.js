@@ -39,6 +39,7 @@ const LANG_STATS = [
 
 export default function ProfilePage() {
     const [user, setUser] = useState(null);
+  const [recent, setRecent] = useState([]);
 
 useEffect(() => {
   const getUser = async () => {
@@ -47,7 +48,6 @@ useEffect(() => {
       window.location.href = '/login';
       return;
     }
-    const [recent, setRecent] = useState(RECENT);
     const { data: submissions } = await supabase
   .from('submissions')
   .select('*')
