@@ -25,6 +25,18 @@ export default function SolvePage() {
       if (data) {
         setProblem(data);
         setCode(data.starter_code || '// Write your solution here');
+      } else {
+        setProblem({
+          id: Number(id), title: 'Two Sum', diff: 'EASY', xp: 120,
+          tags: 'Array', acceptance: '82%', submissions: 4821,
+          description: 'Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.',
+          examples: [{ input: 'nums = [2,7,11,15], target = 9', output: '[0,1]', explanation: 'nums[0] + nums[1] = 2 + 7 = 9' }],
+          constraints: ['2 <= nums.length <= 10^4', '-10^9 <= nums[i] <= 10^9', 'Only one valid answer exists.'],
+          hints: ['Try using a hash map.', 'For each element, check if target minus that element exists.'],
+          starter_code: '# Write your solution here
+def twoSum(nums, target):
+    pass',
+        });
       }
     });
   }, []);
