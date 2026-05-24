@@ -33,9 +33,9 @@ export default function SolvePage() {
           examples: [{ input: 'nums = [2,7,11,15], target = 9', output: '[0,1]', explanation: 'nums[0] + nums[1] = 2 + 7 = 9' }],
           constraints: ['2 <= nums.length <= 10^4', '-10^9 <= nums[i] <= 10^9', 'Only one valid answer exists.'],
           hints: ['Try using a hash map.', 'For each element, check if target minus that element exists.'],
-          starter_code: '# Write your solution here
+          starter_code: `# Write your solution here
 def twoSum(nums, target):
-    pass',
+    pass`,
         });
       }
     });
