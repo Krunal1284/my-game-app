@@ -15,6 +15,12 @@ const SIMILAR = [
   { id: 5, title: "Trapping Rain Water", diff: "HARD", xp: 500 },
 ];
 
+const SIMILAR = [
+  { id: 3, title: "Merge Intervals", diff: "MEDIUM", xp: 280 },
+  { id: 4, title: "Binary Tree Path", diff: "HARD", xp: 500 },
+  { id: 5, title: "Trapping Rain Water", diff: "HARD", xp: 500 },
+];
+
 export default function SolvePage() {
   const [problem, setProblem] = useState(null);
   const [lang, setLang] = useState("python");
@@ -665,7 +671,7 @@ export default function SolvePage() {
                         {h}
                       </div>
                     ))}
-                    {hintsShown < problem?.hints.length && (
+                    {hintsShown < problem?.hints?.length || 0 && (
                       <button className="hint-reveal-btn" onClick={() => setHintsShown((p) => p + 1)}>
                         ◦ REVEAL HINT {hintsShown + 1} <span style={{ marginLeft: "auto", opacity: 0.4 }}>(-5 XP)</span>
                       </button>
@@ -675,7 +681,7 @@ export default function SolvePage() {
                         // Stuck? Reveal hints one by one. Each costs 5 XP.
                       </div>
                     )}
-                    {hintsShown === problem?.hints.length && (
+                    {hintsShown === problem?.hints?.length || 0 && (
                       <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "rgba(34,197,94,0.4)", letterSpacing: 2, marginTop: 8 }}>
                         ✓ ALL HINTS REVEALED
                       </div>
