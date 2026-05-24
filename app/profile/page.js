@@ -47,6 +47,14 @@ useEffect(() => {
       window.location.href = '/login';
       return;
     }
+    const [recent, setRecent] = useState(RECENT);
+    const { data: submissions } = await supabase
+  .from('submissions')
+  .select('*')
+  .eq('user_id', authUser.id)
+  .order('created_at', { ascending: false })
+  .limit(6);
+if (submissions) setRecent(submissions);
     const { data } = await supabase
       .from('users')
       .select('*')
@@ -377,7 +385,7 @@ useEffect(() => {
   </button>
 ))}
           </nav>
-          <div className="avatar" onClick={() => window.location.href = "/settings"}>KG</div>
+          <div className="avatar" onClick={() => window.location.href = "/settings"}>{user?.username?.slice(0,2).toUpperCase() || 'KG'}</div> 
         </header>
 
         <main className="main">
@@ -481,7 +489,7 @@ useEffect(() => {
                     <div className="card-title"><div className="card-dot" />Recent Submissions</div>
                     <button className="card-action">VIEW ALL →</button>
                   </div>
-                  {RECENT.map((r) => (
+                  {recent.map((r) => (
                     <div key={r.id} className="submission-item" onClick={() => window.location.href = `/solve/${r.id}`}>
                       <div className={`sub-status ${r.status === "ACCEPTED" ? "accepted" : "failed"}`} />
                       <div className="sub-info">
