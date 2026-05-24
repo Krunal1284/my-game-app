@@ -47,11 +47,26 @@ export default function Dashboard() {
     if (window.location.hash) window.history.replaceState(null, '', '/dashboard');
     
     await updateStreak(user.email);
-    const { data } = await supabase
+    let { data } = await supabase
       .from('users')
       .select('*')
       .eq('email', user.email)
       .single();
+
+    if (!data) {
+      const username = user.user_metadata?.full_name?.split(' ')[0] || user.email.split('@')[0];
+      await supabase.from('users').insert({
+        id: user.id,
+        email: user.email,
+        username,
+        xp: 0, level: 1, streak: 0, solved: 0, rank: 'BRONZE'
+      });
+      data = { username, xp: 0, level: 1, streak: 0, solved: 0, rank: 'BRONZE' };
+    } else if (!data.username) {
+      const username = user.email.split('@')[0];
+      await supabase.from('users').update({ username }).eq('email', user.email);
+      data = { ...data, username };
+    }
     setUser(data);
   };
   getUser();
