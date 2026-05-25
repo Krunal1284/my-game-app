@@ -156,14 +156,13 @@ export default function ArenaPage() {
   useEffect(() => {
   if (arenaStatus !== "searching" || !currentUser) return;
   const poll = setInterval(async () => {
-    const { data } = await supabase
-      .from("arena_matches")
-      .select("*")
-      .or(`player1_id.eq.${currentUser.id},player2_id.eq.${currentUser.id}`)
-      .eq("status", "active")
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .single();
+   const { data } = await supabase
+  .from("arena_matches")
+  .select("*")
+  .or(`player1_id.eq.${currentUser.id},player2_id.eq.${currentUser.id}`)
+  .eq("status", "active")
+  .limit(1)
+  .maybeSingle();
     if (data && !currentMatch) {
       const targetTable = data.battle_mode === "bugfix" ? "bug_fix_problems" : "problems";
       const { data: prob } = await supabase.from(targetTable).select("*").eq("id", data.problem_id).single();
@@ -197,7 +196,7 @@ export default function ArenaPage() {
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [arenaStatus, playerProgress, rivalProgress]);
+  }, [arenaStatus]);
 
   useEffect(() => {
     let interval;
@@ -209,12 +208,9 @@ export default function ArenaPage() {
     return () => clearInterval(interval);
   }, [arenaStatus]);
 
-  const handleFindMatch = async (mode) => {
-  console.log("handleFindMatch called", mode, currentUser);
-  if (!currentUser) {
-    alert("Not logged in! currentUser is null");
-    return;
-  }
+const handleFindMatch = async (mode) => {
+  if (!currentUser) return;
+  if (arenaStatus !== "idle") return; // ← prevents double click
   setBattleMode(mode);
   setArenaStatus("searching");
   setBattleOutcome(null);
