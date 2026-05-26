@@ -156,11 +156,13 @@ export default function ArenaPage() {
   useEffect(() => {
   if (arenaStatus !== "searching" || !currentUser) return;
   const poll = setInterval(async () => {
-   const { data } = await supabase
+   const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+const { data } = await supabase
   .from("arena_matches")
   .select("*")
   .or(`player1_id.eq.${currentUser.id},player2_id.eq.${currentUser.id}`)
   .eq("status", "active")
+  .gte("inserted_at", fiveMinutesAgo)
   .limit(1)
   .maybeSingle();
     if (data && !currentMatch) {
