@@ -24,19 +24,47 @@ export default function SolvePage() {
     supabase.from('problems').select('*').eq('id', id).single().then(({ data }) => {
       if (data) {
   const parsed = {
-    ...data,
-    examples: typeof data.examples === 'string'
-      ? JSON.parse(data.examples)
-      : (data.examples || []),
-    constraints: typeof data.constraints === 'string'
-      ? JSON.parse(data.constraints)
-      : (data.constraints || []),
-    hints: typeof data.hints === 'string'
-      ? JSON.parse(data.hints)
-      : (data.hints || []),
-  };
-  setProblem(parsed);
-  setCode(String(data.starter_code || '# Write your solution here'));
+  ...data,
+  diff: data.difficulty, // map DB column to what code expects
+  tags: Array.isArray(data.tags) ? data.tags.join(', ') : (data.tags || ''),
+  examples: typeof data.examples === 'string'
+    ? JSON.parse(data.examples)
+    : (data.examples || []),
+  constraints: typeof data.constraints === 'string'
+    ? JSON.parse(data.constraints)
+    : (data.constraints || []),
+  hints: typeof data.hints === 'string'
+    ? JSON.parse(data.hints)
+    : (data.hints || []),
+  test_cases: typeof data.test_cases === 'string'
+    ? JSON.parse(data.test_cases)
+    : (data.test_cases || []),
+};
+setProblem(parsed);
+
+// Fix [object Object] — handle if starter_code is object or string
+const starterCode = typeof data.starter_code === 'object' && data.starter_code !== null
+  ? JSON.stringify(data.starter_code, null, 2)
+  : (data.starter_code || '# Write your solution here');
+setCode(starterCode);
+
+// Load real test cases from problem
+if (parsed.test_cases && parsed.test_cases.length > 0) {
+  setTestCases(parsed.test_cases.map((tc, i) => ({
+    id: i + 1,
+    input: tc.input,
+    expected: tc.expected,
+    status: null,
+  })));
+} else if (parsed.examples && parsed.examples.length > 0) {
+  // fallback: use examples as test cases
+  setTestCases(parsed.examples.map((ex, i) => ({
+    id: i + 1,
+    input: ex.input,
+    expected: ex.output,
+    status: null,
+  })));
+}
 } else {
         setProblem({
           id: Number(id), title: 'Two Sum', diff: 'EASY', xp: 120,
@@ -185,11 +213,39 @@ def twoSum(nums, target):
 };
 
   const handleSubmit = async () => {
-    setRunStatus("running");
-    setSubmitStatus(null);
-    setTimeout(async () => {
+  setRunStatus("running");
+  setSubmitStatus(null);
+  setActiveBottom("testcases");
+
+  const langMap = { python: "python", javascript: "node", java: "java", cpp: "c++" };
+
+  try {
+    const response = await fetch("https://emkc.org/api/v2/piston/execute", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        language: langMap[lang],
+        version: "*",
+        files: [{ content: code }],
+      }),
+    });
+
+    const data = await response.json();
+    const output = data.run.stdout?.trim() || data.run.stderr?.trim() || "No output";
+    const hasError = !!data.run.stderr;
+
+    const results = testCases.map((tc) => ({
+      ...tc,
+      output,
+      status: hasError ? "fail" : output === tc.expected.trim() ? "pass" : "fail",
+    }));
+
+    setTestCases(results);
+    const allPassed = !hasError && results.every((r) => r.status === "pass");
+    setRunStatus(null);
+
+    if (allPassed) {
       setTimerActive(false);
-      setRunStatus(null);
       setSubmitStatus("accepted");
       setShowXPBurst(true);
       setActiveBottom("result");
@@ -199,36 +255,36 @@ def twoSum(nums, target):
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const { data: userData } = await supabase
-          .from('users')
-          .select('*')
-          .eq('email', user.email)
-          .single();
-
+          .from('users').select('*').eq('email', user.email).single();
         if (userData) {
-  await supabase
-    .from('users')
-    .update({
-      xp: (userData.xp || 0) + problem?.xp,
-      solved: (userData.solved || 0) + 1,
-      level: Math.floor(((userData.xp || 0) + problem?.xp) / 1000) + 1,
-    })
-    .eq('email', user.email);
-
-  // Save submission to database
-  await supabase.from('submissions').insert({
-    user_id: user.id,
-    problem_id: problem?.id,
-    problem_title: problem?.title,
-    language: lang,
-    code: code,
-    status: 'ACCEPTED',
-    xp_earned: problem?.xp,
-    time_taken: time,
-  });
-}
+          await supabase.from('users').update({
+            xp: (userData.xp || 0) + problem?.xp,
+            solved: (userData.solved || 0) + 1,
+            level: Math.floor(((userData.xp || 0) + problem?.xp) / 1000) + 1,
+          }).eq('email', user.email);
+          await supabase.from('submissions').insert({
+            user_id: user.id,
+            problem_id: problem?.id,
+            problem_title: problem?.title,
+            language: lang,
+            code: code,
+            status: 'ACCEPTED',
+            xp_earned: problem?.xp,
+            time_taken: time,
+          });
+        }
       }
-    }, 2400);
-  };
+    } else {
+      setSubmitStatus("failed");
+      setActiveBottom("testcases");
+    }
+  } catch (err) {
+    setRunStatus(null);
+    setSubmitStatus("failed");
+  }
+};
+
+      
 
   const diffColor = (d) => d === "EASY" ? "#22c55e" : d === "MEDIUM" ? "#f59e0b" : "#ef4444";
   if (!problem) return <div style={{color:'#facc15', fontFamily:'monospace', padding:40}}>Loading...</div>;
@@ -841,11 +897,19 @@ def twoSum(nums, target):
                             ))}
                           </div>
                         </>
-                      ) : (
-                        <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "rgba(255,255,255,0.2)", letterSpacing: 2 }}>
-                          // Submit your solution to see results
-                        </div>
-                      )}
+                      ) : submitStatus === "failed" ? (
+  <div style={{
+    background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.2)",
+    padding: "12px 16px", fontFamily: "'Orbitron', monospace",
+    fontSize: 14, fontWeight: 700, color: "#ef4444", letterSpacing: 1
+  }}>
+    ✗ WRONG ANSWER — CHECK TEST CASES
+  </div>
+) : (
+  <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "rgba(255,255,255,0.2)", letterSpacing: 2 }}>
+    // Submit your solution to see results
+  </div>
+)}
                     </div>
                   )}
                 </div>
