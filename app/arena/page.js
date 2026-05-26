@@ -186,29 +186,24 @@ export default function ArenaPage() {
   const poll = setInterval(checkMatch, 2000); // ← also poll every 2s as backup
   return () => clearInterval(poll);
 }, [arenaStatus, currentUser, battleMode]); // ← removed currentMatch from deps
-  .from("arena_matches")
-  .select("*")
-  .or(`player1_id.eq.${currentUser.id},player2_id.eq.${currentUser.id}`)
-  .eq("status", "active")
-  .eq("battle_mode", battleMode)
-  .limit(1)
-  .maybeSingle();
-    if (data && !currentMatch) {
-      const targetTable = data.battle_mode === "bugfix" ? "bug_fix_problems" : "problems";
-      const { data: prob } = await supabase.from(targetTable).select("*").eq("id", data.problem_id).single();
-      setProblem(prob);
-      setPlayerCode(data.battle_mode === "bugfix" ? prob?.buggy_code || "" : "// Write your optimal solution here...");
-      const rivalName = data.player1_id === currentUser.id ? data.player2_username : data.player1_username;
-      const rivalId = data.player1_id === currentUser.id ? data.player2_id : data.player1_id;
-      setRival({ username: rivalName, id: rivalId });
-      setCurrentMatch(data);
-      setArenaStatus("found");
-      const role = data.player1_id === currentUser.id ? "player1" : "player2";
-      subscribeToMatch(data.id, role, data.battle_mode);
+
+  useEffect(() => {
+    let interval;
+    if (arenaStatus === "active") {
+      setBattleTimer(600);
+      interval = setInterval(() => {
+        setBattleTimer((p) => {
+          if (p <= 1) {
+            clearInterval(interval);
+            handleMatchEndEvaluation(null, "Time limit reached!");
+            return 0;
+          }
+          return p - 1;
+        });
+      }, 1000);
     }
-  }, 3000);
-  return () => clearInterval(poll);
-}, [arenaStatus, currentUser, currentMatch]);
+    return () => clearInterval(interval);
+  }, [arenaStatus]);
 
   useEffect(() => {
     let interval;
