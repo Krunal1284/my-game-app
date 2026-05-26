@@ -190,7 +190,8 @@ def twoSum(nums, target):
     cpp: "c++",
   };
 
-  try const langMap2 = {
+  try {
+    const langMap2 = {
       python: { language: "python3", versionIndex: "3" },
       javascript: { language: "nodejs", versionIndex: "4" },
       java: { language: "java", versionIndex: "4" },
@@ -210,17 +211,14 @@ def twoSum(nums, target):
     });
 
     const data = await response.json();
-    const output = data.output || "No output";
+    const output = data.output?.trim() || "No output";
+    const hasError = data.statusCode !== 200;
 
     const results = testCases.map((tc) => ({
       ...tc,
       output,
-       status: data.run.stderr 
-       ? "fail" 
-       : output.trim() === tc.expected.trim() 
-       ? "pass" 
-        : "fail",
-      }));
+      status: hasError ? "fail" : output === tc.expected.trim() ? "pass" : "fail",
+    }));
 
     setTestCases(results);
     setRunStatus("passed");
