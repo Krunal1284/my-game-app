@@ -28,6 +28,7 @@ export default function ArenaPage() {
   const hasTypedRef = useRef(false);
   const matchChannelRef = useRef(null);
   const queueChannelRef = useRef(null);
+  const battleModeRef = useRef(null); // ← add this
 
   // ─── GAME OVER & EVALUATION LOGIC ────────────────────────────────────────
   const handleMatchEndEvaluation = async (forcedWinnerId = null, reason = "") => {
@@ -163,7 +164,7 @@ export default function ArenaPage() {
       .select("*")
       .or(`player1_id.eq.${currentUser.id},player2_id.eq.${currentUser.id}`)
       .eq("status", "active")
-      .eq("battle_mode", battleMode)
+      .eq("battle_mode", battleModeRef.current)
       .limit(1)
       .maybeSingle();
 
@@ -217,9 +218,10 @@ export default function ArenaPage() {
 
 const handleFindMatch = async (mode) => {
   if (!currentUser) return;
-  if (arenaStatus !== "idle") return; // ← prevents double click
+  if (arenaStatus !== "idle") return;
   setBattleMode(mode);
   setArenaStatus("searching");
+  battleModeRef.current = mode; // ← store immediately in ref
   setBattleOutcome(null);
   setPlayerProgress(0);
   setRivalProgress(0);
