@@ -43,8 +43,11 @@ export default function SolvePage() {
 setProblem(parsed);
 
 // Fix [object Object] — handle if starter_code is object or string
-const starterCode = typeof data.starter_code === 'object' && data.starter_code !== null
-  ? JSON.stringify(data.starter_code, null, 2)
+const starterObj = typeof data.starter_code === 'object' && data.starter_code !== null
+  ? data.starter_code
+  : null;
+const starterCode = starterObj
+  ? (starterObj[lang] || starterObj['python'] || '# Write your solution here')
   : (data.starter_code || '# Write your solution here');
 setCode(starterCode);
 
@@ -111,8 +114,14 @@ def twoSum(nums, target):
 
   // Sync starter code when lang changes
   useEffect(() => {
-    setCode(String(problem?.starter_code || "// Write your solution here"));
-  }, [lang]);
+  if (!problem) return;
+  const sc = problem.starter_code;
+  if (typeof sc === 'object' && sc !== null) {
+    setCode(sc[lang] || sc['python'] || '# Write your solution here');
+  } else {
+    setCode(String(sc || '# Write your solution here'));
+  }
+}, [lang, problem]);
 
   // Canvas hex bg
   useEffect(() => {
