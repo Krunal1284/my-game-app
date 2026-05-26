@@ -207,24 +207,6 @@ export default function ArenaPage() {
 
   useEffect(() => {
     let interval;
-    if (arenaStatus === "active") {
-      setBattleTimer(600);
-      interval = setInterval(() => {
-        setBattleTimer((p) => {
-          if (p <= 1) {
-            clearInterval(interval);
-            handleMatchEndEvaluation(null, "Time limit reached!");
-            return 0;
-          }
-          return p - 1;
-        });
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [arenaStatus]);
-
-  useEffect(() => {
-    let interval;
     if (arenaStatus === "searching") {
       interval = setInterval(() => setQueueTime((p) => p + 1), 1000);
     } else {
