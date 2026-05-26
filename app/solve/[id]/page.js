@@ -190,19 +190,27 @@ def twoSum(nums, target):
     cpp: "c++",
   };
 
-  try {
-    const response = await fetch("https://emkc.org/api/v2/piston/execute", {
+  try const langMap2 = {
+      python: { language: "python3", versionIndex: "3" },
+      javascript: { language: "nodejs", versionIndex: "4" },
+      java: { language: "java", versionIndex: "4" },
+      cpp: { language: "cpp17", versionIndex: "0" },
+    };
+
+    const response = await fetch("https://api.jdoodle.com/v1/execute", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        language: langMap[lang],
-        version: "*",
-        files: [{ content: code }],
+        clientId: process.env.NEXT_PUBLIC_JDOODLE_CLIENT_ID,
+        clientSecret: process.env.NEXT_PUBLIC_JDOODLE_CLIENT_SECRET,
+        script: code,
+        language: langMap2[lang].language,
+        versionIndex: langMap2[lang].versionIndex,
       }),
     });
 
     const data = await response.json();
-    const output = data.run.stdout || data.run.stderr || "No output";
+    const output = data.output || "No output";
 
     const results = testCases.map((tc) => ({
       ...tc,
@@ -245,8 +253,8 @@ def twoSum(nums, target):
     });
 
     const data = await response.json();
-    const output = data.run.stdout?.trim() || data.run.stderr?.trim() || "No output";
-    const hasError = !!data.run.stderr;
+    const output = data.output?.trim() || "No output";
+    const hasError = data.statusCode !== 200 || output.toLowerCase().includes("error");
 
     const results = testCases.map((tc) => ({
       ...tc,
