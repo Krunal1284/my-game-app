@@ -216,7 +216,12 @@ def twoSum(nums, target):
 
     setTestCases(results);
     setRunStatus("passed");
-  } catch (err) {
+ } catch (err) {
+    setTestCases(prev => prev.map(tc => ({
+      ...tc,
+      output: "Network error — could not reach compiler",
+      status: "fail"
+    })));
     setRunStatus("failed");
   }
 };
@@ -874,10 +879,16 @@ def twoSum(nums, target):
                             CASE {tc.id}
                           </div>
                           <div className="tc-io">
-                      <span>IN:</span> {tc.input}<br />
-                       <span>EXP:</span> {tc.expected}<br />
-                      {tc.output && <><span>OUT:</span> {tc.output}</>}
-                      </div>
+                            <span>IN:</span> {tc.input}<br />
+                            <span>EXP:</span> {tc.expected}<br />
+                            {tc.output && (
+                              <>
+                                <span style={{color: tc.status === "pass" ? "#22c55e" : "#ef4444"}}>
+                                  OUT:
+                                </span> {tc.output}
+                              </>
+                            )}
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -895,9 +906,7 @@ def twoSum(nums, target):
                           <div className="result-stats">
                             {[
                               { val: `+${problem?.xp}`, lbl: "XP EARNED" },
-                              { val: "84%", lbl: "FASTER THAN" },
-                              { val: "91%", lbl: "LESS MEMORY" },
-                              { val: `${formatTime(time)}`, lbl: "TIME TAKEN" },
+                              { val: formatTime(time), lbl: "TIME TAKEN" },
                             ].map((r) => (
                               <div key={r.lbl} className="result-stat">
                                 <div className="result-stat-val">{r.val}</div>
