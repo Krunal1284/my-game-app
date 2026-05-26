@@ -420,7 +420,19 @@ def twoSum(nums, target):
           background: rgba(250,204,21,0.06);
           transition: background 0.2s; position: relative; z-index: 10;
         }
-        .resizer:hover { background: rgba(250,204,21,0.25); }
+        @media (max-width: 768px) {
+          .body { flex-direction: column; }
+          .left-panel { width: 100% !important; height: 340px; border-right: none; border-bottom: 1px solid rgba(250,204,21,0.08); }
+          .resizer { display: none; }
+          .right-panel { flex: 1; min-height: 0; }
+          .topbar { flex-wrap: wrap; height: auto; padding: 8px 12px; gap: 8px; }
+          .topbar-left { width: 100%; }
+          .topbar-center { width: 100%; justify-content: center; }
+          .topbar-right { width: 100%; justify-content: flex-end; }
+          .problem-name { font-size: 11px; }
+          .desc-scroll { padding: 16px 12px; }
+          .bottom-panel { height: 180px !important; }
+        }
 
         /* RIGHT PANEL */
         .right-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
