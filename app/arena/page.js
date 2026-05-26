@@ -155,8 +155,37 @@ export default function ArenaPage() {
 
   useEffect(() => {
   if (arenaStatus !== "searching" || !currentUser) return;
-  const poll = setInterval(async () => {
-   const { data } = await supabase
+
+  const checkMatch = async () => {
+    if (arenaStatus !== "searching") return;
+    const { data } = await supabase
+      .from("arena_matches")
+      .select("*")
+      .or(`player1_id.eq.${currentUser.id},player2_id.eq.${currentUser.id}`)
+      .eq("status", "active")
+      .eq("battle_mode", battleMode)
+      .limit(1)
+      .maybeSingle();
+
+    if (data && !currentMatch) {
+      const targetTable = data.battle_mode === "bugfix" ? "bug_fix_problems" : "problems";
+      const { data: prob } = await supabase.from(targetTable).select("*").eq("id", data.problem_id).single();
+      setProblem(prob);
+      setPlayerCode(data.battle_mode === "bugfix" ? prob?.buggy_code || "" : "// Write your optimal solution here...");
+      const rivalName = data.player1_id === currentUser.id ? data.player2_username : data.player1_username;
+      const rivalId = data.player1_id === currentUser.id ? data.player2_id : data.player1_id;
+      setRival({ username: rivalName, id: rivalId });
+      setCurrentMatch(data);
+      setArenaStatus("found");
+      const role = data.player1_id === currentUser.id ? "player1" : "player2";
+      subscribeToMatch(data.id, role, data.battle_mode);
+    }
+  };
+
+  checkMatch(); // ← run immediately, don't wait 3 seconds
+  const poll = setInterval(checkMatch, 2000); // ← also poll every 2s as backup
+  return () => clearInterval(poll);
+}, [arenaStatus, currentUser, battleMode]); // ← removed currentMatch from deps
   .from("arena_matches")
   .select("*")
   .or(`player1_id.eq.${currentUser.id},player2_id.eq.${currentUser.id}`)
