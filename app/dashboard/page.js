@@ -6,10 +6,9 @@ import { updateStreak } from '@/lib/streak';
 
 const QUESTS = [
   { id: 1, title: "Two Sum", tag: "ARRAY", xp: 120, diff: "EASY" },
-  { id: 2, title: "Longest Substring", tag: "SLIDING WINDOW", xp: 280, diff: "MEDIUM" },
+  { id: 2, title: "Valid Parentheses", tag: "STRING", xp: 120, diff: "EASY" },
   { id: 3, title: "Merge Intervals", tag: "SORTING", xp: 280, diff: "MEDIUM" },
-  { id: 4, title: "Binary Tree Path", tag: "TREE", xp: 500, diff: "HARD" },
-  { id: 5, title: "Trapping Rain Water", tag: "DP", xp: 500, diff: "HARD" },
+  { id: 4, title: "Longest Substring", tag: "SLIDING WINDOW", xp: 280, diff: "MEDIUM" },
 ];
 
 const LEADERBOARD = [
