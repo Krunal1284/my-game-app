@@ -5,11 +5,11 @@ import { useState, useEffect, useRef } from "react";
 import { updateStreak } from '@/lib/streak';
 
 const QUESTS = [
-  { id: 1, title: "Two Sum", tag: "ARRAY", xp: 120, diff: "EASY", done: true },
-  { id: 2, title: "Longest Substring", tag: "SLIDING WINDOW", xp: 280, diff: "MEDIUM", done: true },
-  { id: 3, title: "Merge Intervals", tag: "SORTING", xp: 280, diff: "MEDIUM", done: false },
-  { id: 4, title: "Binary Tree Path", tag: "TREE", xp: 500, diff: "HARD", done: false },
-  { id: 5, title: "Trapping Rain Water", tag: "DP", xp: 500, diff: "HARD", done: false },
+  { id: 1, title: "Two Sum", tag: "ARRAY", xp: 120, diff: "EASY" },
+  { id: 2, title: "Longest Substring", tag: "SLIDING WINDOW", xp: 280, diff: "MEDIUM" },
+  { id: 3, title: "Merge Intervals", tag: "SORTING", xp: 280, diff: "MEDIUM" },
+  { id: 4, title: "Binary Tree Path", tag: "TREE", xp: 500, diff: "HARD" },
+  { id: 5, title: "Trapping Rain Water", tag: "DP", xp: 500, diff: "HARD" },
 ];
 
 const LEADERBOARD = [
@@ -1030,7 +1030,9 @@ export default function ProfilePage() {
               </div>
 
               {QUESTS.map((q) => (
-                <div key={q.id} className={`quest-item ${solvedIds.includes(q.id) ? "done" : ""}`}>
+                <div key={q.id} className={`quest-item ${solvedIds.includes(q.id) ? "done" : ""}`}
+                  onClick={() => window.location.href = `/solve/${q.id}`}
+                  style={{cursor:'pointer'}}>
                   <div className="quest-check">{solvedIds.includes(q.id) ? "✓" : ""}</div>
                   <div className="quest-info">
                     <div className="quest-name">{q.title}</div>
