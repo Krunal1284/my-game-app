@@ -35,6 +35,7 @@ export default function ProfilePage() {
   const canvasRef = useRef(null);
   const [user, setUser] = useState(null);
   const [recent, setRecent] = useState([]);
+  const [solvedIds, setSolvedIds] = useState([]);
 
     useEffect(() => {
   const getUser = async () => {
@@ -69,6 +70,16 @@ export default function ProfilePage() {
       data = { ...data, username };
     }
     setUser(data);
+
+    const { data: solvedData } = await supabase
+      .from('submissions')
+      .select('problem_id')
+      .eq('user_id', user.id)
+      .eq('status', 'ACCEPTED');
+    if (solvedData) {
+      const ids = solvedData.map(s => s.problem_id);
+      setSolvedIds(ids);
+    }
   };
   getUser();
 }, []);
@@ -1008,7 +1019,7 @@ export default function ProfilePage() {
                   Active Problems
                 </div>
                 <div style={{ display: "flex", gap: 0 }}>
-                  {["quests", "submissions"].map((t) => (
+                  {["problems", "submissions"].map((t) => (
                     <button key={t} className={`tab ${activeTab === t ? "active" : ""}`}
                       onClick={() => setActiveTab(t)}
                     >
@@ -1019,8 +1030,8 @@ export default function ProfilePage() {
               </div>
 
               {QUESTS.map((q) => (
-                <div key={q.id} className={`quest-item ${q.done ? "done" : ""}`}>
-                  <div className="quest-check">{q.done ? "✓" : ""}</div>
+                <div key={q.id} className={`quest-item ${solvedIds.includes(q.id) ? "done" : ""}`}>
+                  <div className="quest-check">{solvedIds.includes(q.id) ? "✓" : ""}</div>
                   <div className="quest-info">
                     <div className="quest-name">{q.title}</div>
                     <div className="quest-tag">{q.tag}</div>
