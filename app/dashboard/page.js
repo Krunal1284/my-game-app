@@ -976,15 +976,15 @@ export default function ProfilePage() {
                 <span className="hero-stat-lbl">Total XP</span>
               </div>
             </div>
-            <button className="daily-btn" style={{ position: "absolute", right: 32, top: "50%", transform: "translateY(-50%)" }}>
-              <span>⚡ DAILY QUEST</span>
+            <button className="daily-btn" style={{ position: "absolute", right: 32, top: "50%", transform: "translateY(-50%)" }} onClick={() => window.location.href = '/problems'}>
+              <span>⚡ DAILY PROBLEM</span>
             </button>
           </div>
 
           {/* Stat cards */}
           <div className="grid3">
             {[
-             { icon: "🗡️", val: user?.solved || 0, lbl: "Quests Solved", change: "+3 this week", bg: "🗡️" },
+           { icon: "🗡️", val: user?.solved || 0, lbl: "Problems Solved", change: "+3 this week", bg: "🗡️" },
             { icon: "🔥", val: user?.streak || 0, lbl: "Day Streak", change: "Personal best!", bg: "🔥" },
             { icon: "⚡", val: user?.xp || 0, lbl: "Total XP", change: "+1,200 today", bg: "⚡" },
             ].map((s) => (
@@ -1005,7 +1005,7 @@ export default function ProfilePage() {
               <div className="card-header">
                 <div className="card-title">
                   <div className="card-title-dot" />
-                  Active Quests
+                  Active Problems
                 </div>
                 <div style={{ display: "flex", gap: 0 }}>
                   {["quests", "submissions"].map((t) => (
