@@ -3,11 +3,7 @@
 import { supabase } from '@/lib/supabase';
 import { useState, useEffect, useRef } from "react";
 
-const TEST_CASES = [
-  { id: 1, input: "[[1,3],[2,6],[8,10],[15,18]]", expected: "[[1,6],[8,10],[15,18]]", status: null },
-  { id: 2, input: "[[1,4],[4,5]]", expected: "[[1,5]]", status: null },
-  { id: 3, input: "[[1,4],[0,4]]", expected: "[[0,4]]", status: null },
-];
+const TEST_CASES = [];
 
 const SIMILAR = [
   { id: 3, title: "Merge Intervals", diff: "MEDIUM", xp: 280 },
@@ -179,19 +175,41 @@ def twoSum(nums, target):
       setTimeout(() => { e.target.selectionStart = e.target.selectionEnd = start + 4; }, 0);
     }
   };
+const normalizeOutput = (str) => 
+    str?.trim().replace(/\s+/g, '').replace(/,\s*/g, ',') || '';
 
-  const handleRun = async () => {
-  setRunStatus("running");
-  setActiveBottom("testcases");
+  const buildTestScript = (userCode, cases, lang) => {
+    if (lang !== 'python') return userCode;
+    const inputsList = '[' + cases.map(tc => JSON.stringify(tc.input)).join(', ') + ']';
+    const runner = `
 
-  const langMap = {
-    python: "python",
-    javascript: "node",
-    java: "java",
-    cpp: "c++",
+import re as _re, json as _j, inspect as _ins
+try:
+    _sol = Solution()
+    _ms = [m for m in dir(_sol) if not m.startswith('_') and callable(getattr(_sol, m))]
+    if _ms:
+        _f = getattr(_sol, _ms[0])
+        _ps = list(_ins.signature(_f).parameters.keys())
+        _tests = ${inputsList}
+        for _t in _tests:
+            try:
+                _e = {}
+                for _p in _re.split(r',\\s*(?=\\w+\\s*=)', _t):
+                    exec(_p.strip(), {}, _e)
+                _r = _f(**{p: _e[p] for p in _ps if p in _e})
+                print(_j.dumps(_r))
+            except Exception as ex:
+                print("ERR:" + str(ex))
+except Exception as ex:
+    print("SETUP_ERR:" + str(ex))
+`;
+    return userCode + runner;
   };
 
-  try {
+  const handleRun = async () => {
+    setRunStatus("running");
+    setActiveBottom("testcases");
+
     const langMap2 = {
       python: { language: "python3", versionIndex: "3" },
       javascript: { language: "nodejs", versionIndex: "4" },
@@ -199,38 +217,43 @@ def twoSum(nums, target):
       cpp: { language: "cpp17", versionIndex: "0" },
     };
 
-    const response = await fetch("/api/execute", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        script: code,
-        language: langMap2[lang].language,
-        versionIndex: langMap2[lang].versionIndex,
-      }),
-    });
+    try {
+      const script = buildTestScript(code, testCases, lang);
+      const response = await fetch("/api/execute", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          script,
+          language: langMap2[lang].language,
+          versionIndex: langMap2[lang].versionIndex,
+        }),
+      });
 
-    const data = await response.json();
-    const output = data.output?.trim() || "No output";
-    const hasError = data.statusCode !== 200;
+      const data = await response.json();
+      const rawOutput = data.output?.trim() || "No output";
+      const hasError = data.statusCode !== 200;
+      const outputLines = rawOutput.split('\n').filter(l => l.trim());
 
-    const results = testCases.map((tc) => ({
-      ...tc,
-      output,
-      status: hasError ? "fail" : output === tc.expected.trim() ? "pass" : "fail",
-    }));
+      setLastOutput(rawOutput);
 
-    setLastOutput(output);
-    setTestCases(results);
-    setRunStatus("passed");
- } catch (err) {
-    setTestCases(prev => prev.map(tc => ({
-      ...tc,
-      output: "Network error — could not reach compiler",
-      status: "fail"
-    })));
-    setRunStatus("failed");
-  }
-};
+      const results = testCases.map((tc, i) => {
+        const lineOut = outputLines[i] || '';
+        const pass = !hasError && !lineOut.startsWith('ERR:') && !lineOut.startsWith('SETUP_ERR:') &&
+          normalizeOutput(lineOut) === normalizeOutput(tc.expected);
+        return { ...tc, output: lineOut || rawOutput, status: hasError ? 'fail' : pass ? 'pass' : 'fail' };
+      });
+
+      setTestCases(results);
+      setRunStatus("passed");
+    } catch (err) {
+      setTestCases(prev => prev.map(tc => ({
+        ...tc,
+        output: "Network error — could not reach compiler",
+        status: "fail"
+      })));
+      setRunStatus("failed");
+    }
+  };
 
   const handleSubmit = async () => {
   setRunStatus("running");
@@ -240,25 +263,35 @@ def twoSum(nums, target):
   const langMap = { python: "python", javascript: "node", java: "java", cpp: "c++" };
 
   try {
-    const response = await fetch("https://emkc.org/api/v2/piston/execute", {
+    const langMap2 = {
+      python: { language: "python3", versionIndex: "3" },
+      javascript: { language: "nodejs", versionIndex: "4" },
+      java: { language: "java", versionIndex: "4" },
+      cpp: { language: "cpp17", versionIndex: "0" },
+    };
+
+    const script = buildTestScript(code, testCases, lang);
+    const response = await fetch("/api/execute", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        language: langMap[lang],
-        version: "*",
-        files: [{ content: code }],
+        script,
+        language: langMap2[lang].language,
+        versionIndex: langMap2[lang].versionIndex,
       }),
     });
 
     const data = await response.json();
-    const output = data.output?.trim() || "No output";
-    const hasError = data.statusCode !== 200 || output.toLowerCase().includes("error");
+    const rawOutput = data.output?.trim() || "No output";
+    const hasError = data.statusCode !== 200;
+    const outputLines = rawOutput.split('\n').filter(l => l.trim());
 
-    const results = testCases.map((tc) => ({
-      ...tc,
-      output,
-      status: hasError ? "fail" : output === tc.expected.trim() ? "pass" : "fail",
-    }));
+    const results = testCases.map((tc, i) => {
+      const lineOut = outputLines[i] || '';
+      const pass = !hasError && !lineOut.startsWith('ERR:') && !lineOut.startsWith('SETUP_ERR:') &&
+        normalizeOutput(lineOut) === normalizeOutput(tc.expected);
+      return { ...tc, output: lineOut || rawOutput, status: hasError ? 'fail' : pass ? 'pass' : 'fail' };
+    });
 
     setTestCases(results);
     const allPassed = !hasError && results.every((r) => r.status === "pass");
@@ -840,7 +873,14 @@ def twoSum(nums, target):
                   <span className="editor-label">// CODE EDITOR · {lang.toUpperCase()}</span>
                 </div>
                 <div style={{ display: "flex", gap: 4 }}>
-                  <button className="toolbar-action" onClick={() => setCode(String(problem?.starter_code || "// Write your solution here"))}>RESET</button>
+                 <button className="toolbar-action" onClick={() => {
+                    const sc = problem?.starter_code;
+                    if (typeof sc === 'object' && sc !== null) {
+                      setCode(sc[lang] || sc['python'] || '# Write your solution here');
+                    } else {
+                      setCode(String(sc || '# Write your solution here'));
+                    }
+                  }}>RESET</button>
                   <button className="toolbar-action">FORMAT</button>
                   <button className="toolbar-action">FULLSCREEN</button>
                 </div>
