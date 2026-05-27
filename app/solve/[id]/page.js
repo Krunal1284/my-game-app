@@ -476,6 +476,9 @@ except Exception as ex:
           .resizer { display: none; }
           .right-panel { width: 100%; flex: 1; overflow: hidden; }
           .bottom-panel { height: 160px !important; }
+          .editor-area { flex: 1; min-height: 0; overflow: hidden; }
+          .code-wrap { height: 100%; }
+          .code-textarea { height: 100%; overflow-y: auto; }
           .desc-scroll { padding: 12px; }
         .mobile-tab-bar { display: flex !important; border-bottom: 1px solid rgba(250,204,21,0.1); flex-shrink: 0; }
           .mobile-hide { display: none !important; }
@@ -594,7 +597,7 @@ except Exception as ex:
         }
         .toolbar-action:hover { color: rgba(250,204,21,0.6); }
 
-        .code-wrap { flex: 1; overflow: hidden; position: relative; display: flex; }
+       .code-wrap { flex: 1; overflow: hidden; position: relative; display: flex; min-height: 0; }
         .line-numbers {
           width: 44px; padding: 16px 8px; background: rgba(0,0,0,0.2);
           border-right: 1px solid rgba(250,204,21,0.05); flex-shrink: 0;
