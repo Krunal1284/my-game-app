@@ -464,7 +464,7 @@ if 'Solution' in dir():
         @media (max-width: 768px) {
           .app { height: 100vh; overflow: hidden; }
           .topbar { flex-wrap: wrap; height: auto; padding: 6px 12px; gap: 4px; }
-          .topbar-left { width: 100%; }
+          .topbar-left { width: 100%; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
           .topbar-center { width: 100%; justify-content: center; }
           .topbar-right { width: 100%; justify-content: space-between; align-items: center; }
           .problem-name { font-size: 11px; }
@@ -729,7 +729,7 @@ if 'Solution' in dir():
         {/* ── TOPBAR ── */}
         <header className="topbar">
           <div className="topbar-left">
-            <button className="back-btn">◂ ARENA</button>
+           <button className="back-btn" onClick={() => window.location.href = '/problems'} style={{fontSize:'9px', padding:'4px 8px'}}>◂ PROBLEMS</button>
             <div className="problem-title-bar">
               <span className="problem-id">#{problem?.id}</span>
               <span className="problem-name">{problem?.title}</span>
