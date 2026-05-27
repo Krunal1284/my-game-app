@@ -2,6 +2,7 @@
 
 import { supabase } from '@/lib/supabase';
 import { useState, useEffect, useRef } from "react";
+import { updateStreak } from '@/lib/streak';
 
 const BADGES = [
   { icon: "⚡", label: "Speed Coder",  earned: true,  desc: "Solved a problem in under 5 min" },
@@ -30,12 +31,7 @@ const STATS_BREAKDOWN = [
   { label: "HARD",   solved: 0,  total: 46,  color: "#ef4444" },
 ];
 
-const LANG_STATS = [
-  { lang: "Python",     pct: 62, color: "#3b82f6" },
-  { lang: "JavaScript", pct: 24, color: "#f59e0b" },
-  { lang: "Java",       pct: 9,  color: "#ef4444" },
-  { lang: "C++",        pct: 5,  color: "#8b5cf6" },
-];
+const LANG_STATS = [];
 
 export default function Dashboard() {
     const [user, setUser] = useState(null);
@@ -48,6 +44,7 @@ useEffect(() => {
       window.location.href = '/login';
       return;
     }
+    await updateStreak(authUser.email);
     const { data: submissions } = await supabase
   .from('submissions')
   .select('*')
@@ -83,12 +80,30 @@ if (submissions) setRecent(submissions.map(s => ({
         { label: "MEDIUM", solved: medium, total: 100, color: "#f59e0b" },
         { label: "HARD",   solved: hard,   total: 46,  color: "#ef4444" },
       ]);
+
+      if (allSubs.length > 0) {
+        const langCount = {};
+        allSubs.forEach(s => {
+          const l = s.language || 'python';
+          langCount[l] = (langCount[l] || 0) + 1;
+        });
+        const total = allSubs.length;
+        const colors = { python: "#3b82f6", javascript: "#f59e0b", java: "#ef4444", cpp: "#8b5cf6" };
+        const names = { python: "Python", javascript: "JavaScript", java: "Java", cpp: "C++" };
+        const stats = Object.entries(langCount).map(([lang, count]) => ({
+          lang: names[lang] || lang,
+          pct: Math.round((count / total) * 100),
+          color: colors[lang] || "#facc15",
+        })).sort((a, b) => b.pct - a.pct);
+        setLangStats(stats);
+      }
     }
   };
   getUser();
 }, []);
-  const [activeTab, setActiveTab] = useState("overview");
+ const [activeTab, setActiveTab] = useState("overview");
   const [breakdown, setBreakdown] = useState(STATS_BREAKDOWN);
+  const [langStats, setLangStats] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [avatar, setAvatar] = useState(null);
   const [loaded, setLoaded] = useState(false);
@@ -494,7 +509,7 @@ if (submissions) setRecent(submissions.map(s => ({
                 <div className="card">
                   <div className="card-header">
                     <div className="card-title"><div className="card-dot" />Activity Heatmap</div>
-                    <button className="card-action">142 SUBMISSIONS THIS YEAR</button>
+                   <button className="card-action">{recent.length} RECENT SUBMISSIONS</button>
                   </div>
                   <div className="heatmap-wrap">
                     <div className="heatmap-grid">
@@ -621,7 +636,7 @@ if (submissions) setRecent(submissions.map(s => ({
                   <div className="card-title"><div className="card-dot" />Languages Used</div>
                 </div>
                 <div className="lang-wrap">
-                  {LANG_STATS.map((l) => (
+                  {langStats.map((l) => (
                     <div key={l.lang} className="lang-row">
                       <div className="lang-header">
                         <span className="lang-name">{l.lang}</span>
