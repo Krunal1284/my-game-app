@@ -7,8 +7,11 @@ import { updateStreak } from '@/lib/streak';
 const QUESTS = [
   { id: 1, title: "Two Sum", tag: "ARRAY", xp: 120, diff: "EASY" },
   { id: 2, title: "Valid Parentheses", tag: "STRING", xp: 120, diff: "EASY" },
-  { id: 3, title: "Merge Intervals", tag: "SORTING", xp: 280, diff: "MEDIUM" },
+  { id: 3, title: "Best Time to Buy Stock", tag: "ARRAY", xp: 150, diff: "EASY" },
   { id: 4, title: "Longest Substring", tag: "SLIDING WINDOW", xp: 280, diff: "MEDIUM" },
+  { id: 5, title: "Merge Intervals", tag: "SORTING", xp: 280, diff: "MEDIUM" },
+  { id: 6, title: "3 Sum", tag: "ARRAY", xp: 280, diff: "MEDIUM" },
+  { id: 7, title: "Word Search", tag: "BACKTRACKING", xp: 500, diff: "HARD" },
 ];
 
 const LEADERBOARD = [
