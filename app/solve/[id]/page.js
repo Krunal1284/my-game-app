@@ -6,9 +6,9 @@ import { useState, useEffect, useRef } from "react";
 const TEST_CASES = [];
 
 const SIMILAR = [
-  { id: 3, title: "Merge Intervals", diff: "MEDIUM", xp: 280 },
-  { id: 4, title: "Binary Tree Path", diff: "HARD", xp: 500 },
-  { id: 5, title: "Trapping Rain Water", diff: "HARD", xp: 500 },
+  { id: 4, title: "Longest Substring", diff: "MEDIUM", xp: 280 },
+  { id: 5, title: "Merge Intervals", diff: "MEDIUM", xp: 280 },
+  { id: 6, title: "3 Sum", diff: "MEDIUM", xp: 280 },
 ];
 
 export default function SolvePage() {
@@ -767,7 +767,7 @@ if 'Solution' in dir():
         </header>
 
         {/* MOBILE TAB SWITCHER */}
-        <div className="mobile-tab-bar">
+        <div className="mobile-tab-bar" style={{display:'none'}}>
           {["desc","code"].map(t => (
             <button key={t} onClick={() => setMobileTab(t)} style={{
               flex:1, padding:'10px', border:'none',
