@@ -427,17 +427,19 @@ def twoSum(nums, target):
           transition: background 0.2s; position: relative; z-index: 10;
         }
         @media (max-width: 768px) {
-          .body { flex-direction: column; }
-          .left-panel { width: 100% !important; height: 340px; border-right: none; border-bottom: 1px solid rgba(250,204,21,0.08); }
+          .app { height: auto; min-height: 100vh; overflow-y: auto; }
+          .body { flex-direction: column; overflow: visible; height: auto; }
+          .left-panel { width: 100% !important; height: auto; max-height: 50vh; border-right: none; border-bottom: 1px solid rgba(250,204,21,0.08); overflow-y: auto; }
           .resizer { display: none; }
-          .right-panel { flex: 1; min-height: 0; }
-          .topbar { flex-wrap: wrap; height: auto; padding: 8px 12px; gap: 8px; }
+          .right-panel { flex: none; height: 60vh; }
+          .topbar { flex-wrap: wrap; height: auto; padding: 8px 12px; gap: 6px; position: relative; }
           .topbar-left { width: 100%; }
           .topbar-center { width: 100%; justify-content: center; }
-          .topbar-right { width: 100%; justify-content: flex-end; }
+          .topbar-right { width: 100%; justify-content: space-between; }
           .problem-name { font-size: 11px; }
           .desc-scroll { padding: 16px 12px; }
-          .bottom-panel { height: 180px !important; }
+          .bottom-panel { height: 200px !important; flex-shrink: 0; }
+          .code-wrap { height: 200px; }
         }
 
         /* RIGHT PANEL */
