@@ -54,7 +54,14 @@ useEffect(() => {
   .eq('user_id', authUser.id)
   .order('created_at', { ascending: false })
   .limit(6);
-if (submissions) setRecent(submissions);
+if (submissions) setRecent(submissions.map(s => ({
+  ...s,
+  title: s.problem_title,
+  time: s.time_taken ? `${Math.floor(s.time_taken/60)}m ${s.time_taken%60}s` : '—',
+  date: new Date(s.created_at).toLocaleDateString(),
+  diff: s.difficulty || 'EASY',
+  xp: s.xp_earned || 0,
+})));
     const { data } = await supabase
       .from('users')
       .select('*')
