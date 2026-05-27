@@ -967,7 +967,7 @@ export default function ProfilePage() {
             <div className="hero-title">
               Ready to <span>Level Up,</span> {user?.username || 'Player'}?
             </div>
-            <div className="hero-sub">You're 3 problems away from reaching Platinum tier</div>
+           <div className="hero-sub">You're {Math.max(0, 20 - (user?.solved || 0))} problems away from reaching Platinum tier</div>
             <div className="hero-stats">
               <div className="hero-stat">
                <span className="hero-stat-val">{user?.streak || 0}</span>

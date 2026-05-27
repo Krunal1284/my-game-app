@@ -312,9 +312,17 @@ if 'Solution' in dir():
         const { data: userData } = await supabase
           .from('users').select('*').eq('email', user.email).single();
         if (userData) {
+          const { data: alreadySolved } = await supabase
+            .from('submissions')
+            .select('id')
+            .eq('user_id', user.id)
+            .eq('problem_id', problem?.id)
+            .eq('status', 'ACCEPTED')
+            .limit(1);
+          const isFirstSolve = !alreadySolved || alreadySolved.length === 0;
           await supabase.from('users').update({
             xp: (userData.xp || 0) + problem?.xp,
-            solved: (userData.solved || 0) + 1,
+            solved: isFirstSolve ? (userData.solved || 0) + 1 : (userData.solved || 0),
             level: Math.floor(((userData.xp || 0) + problem?.xp) / 1000) + 1,
           }).eq('email', user.email);
           await supabase.from('submissions').insert({
