@@ -914,9 +914,9 @@ export default function ProfilePage() {
             <div className="nav-label">NAVIGATE</div>
             {[
              { icon: "🏠", label: "Home", link: "/dashboard" },
-            { icon: "📋", label: "Quests", link: "/problems" },
+            { icon: "📋", label: "Problems", link: "/problems" },
             { icon: "⚔️", label: "Arena", link: "/arena" },
-            { icon: "🏆", label: "Board", link: "/leaderboard" },
+            { icon: "🏆", label: "Leaderboard", link: "/leaderboard" },
             { icon: "⚙️", label: "Settings", link: "/settings" },
             ].map((item) => (
              <button key={item.label}
@@ -1125,9 +1125,9 @@ export default function ProfilePage() {
       }} className="mobile-nav">
         {[
         { icon: "🏠", label: "Dashboard", active: true, link: "/dashboard" },
-        { icon: "📋", label: "Quests", count: "247", link: "/problems" },
+        { icon: "📋", label: "Problems", count: "247", link: "/problems" },
        { icon: "⚔️", label: "Arena", link: "/arena" },
-        { icon: "🏆", label: "Board", link: "/leaderboard" },
+        { icon: "🏆", label: "Leaderboard", link: "/leaderboard" },
         { icon: "⚙️", label: "Settings", link: "/settings" },
         ].map((item) => (
           <button key={item.label}
