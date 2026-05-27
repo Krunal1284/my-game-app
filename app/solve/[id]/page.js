@@ -185,24 +185,25 @@ const normalizeOutput = (str) =>
     const runner = `
 
 import re as _re, json as _j, inspect as _ins
-try:
-    _sol = Solution()
-    _ms = [m for m in dir(_sol) if not m.startswith('_') and callable(getattr(_sol, m))]
-    if _ms:
-        _f = getattr(_sol, _ms[0])
-        _ps = list(_ins.signature(_f).parameters.keys())
-        _tests = ${inputsList}
-        for _t in _tests:
-            try:
-                _e = {}
-                for _p in _re.split(r',\\s*(?=\\w+\\s*=)', _t):
-                    exec(_p.strip(), {}, _e)
-                _r = _f(**{p: _e[p] for p in _ps if p in _e})
-                print(_j.dumps(_r))
-            except Exception as ex:
-                print("ERR:" + str(ex))
-except Exception as ex:
-    print("SETUP_ERR:" + str(ex))
+if 'Solution' in dir():
+    try:
+        _sol = Solution()
+        _ms = [m for m in dir(_sol) if not m.startswith('_') and callable(getattr(_sol, m))]
+        if _ms:
+            _f = getattr(_sol, _ms[0])
+            _ps = list(_ins.signature(_f).parameters.keys())
+            _tests = ${inputsList}
+            for _t in _tests:
+                try:
+                    _e = {}
+                    for _p in _re.split(r',\\s*(?=\\w+\\s*=)', _t):
+                        exec(_p.strip(), {}, _e)
+                    _r = _f(**{p: _e[p] for p in _ps if p in _e})
+                    print(_j.dumps(_r))
+                except Exception as ex:
+                    print("ERR:" + str(ex))
+    except Exception as ex:
+        print("SETUP_ERR:" + str(ex))
 `;
     return userCode + runner;
   };
