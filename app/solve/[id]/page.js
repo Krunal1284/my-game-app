@@ -474,11 +474,12 @@ except Exception as ex:
           .body { flex-direction: column; overflow: hidden; flex: 1; }
           .left-panel { width: 100% !important; flex: 1; border-right: none; overflow-y: auto; }
           .resizer { display: none; }
-          .right-panel { width: 100%; flex: 1; overflow: hidden; }
-          .bottom-panel { height: 160px !important; }
-          .editor-area { flex: 1; min-height: 0; overflow: hidden; }
-          .code-wrap { height: 100%; }
+          .right-panel { width: 100%; flex: 1; overflow-y: auto; flex-direction: column; }
+          .bottom-panel { height: auto !important; flex-shrink: 0; }
+          .editor-area { flex-shrink: 0; }
+          .code-wrap { height: 260px; }
           .code-textarea { height: 100%; overflow-y: auto; }
+          .bottom-body { max-height: none; overflow: visible; }
           .desc-scroll { padding: 12px; }
         .mobile-tab-bar { display: flex !important; border-bottom: 1px solid rgba(250,204,21,0.1); flex-shrink: 0; }
           .mobile-hide { display: none !important; }
