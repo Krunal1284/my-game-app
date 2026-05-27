@@ -93,6 +93,7 @@ def twoSum(nums, target):
   const [hintsShown, setHintsShown] = useState(0);
   const [time, setTime] = useState(0);
   const [timerActive, setTimerActive] = useState(true);
+  const [lastOutput, setLastOutput] = useState(null);
   const [showXPBurst, setShowXPBurst] = useState(false);
   const [splitPos, setSplitPos] = useState(42); // percent for left panel
   const canvasRef = useRef(null);
@@ -220,6 +221,7 @@ def twoSum(nums, target):
       status: hasError ? "fail" : output === tc.expected.trim() ? "pass" : "fail",
     }));
 
+    setLastOutput(output);
     setTestCases(results);
     setRunStatus("passed");
  } catch (err) {
@@ -889,6 +891,18 @@ def twoSum(nums, target):
                       EXECUTING CODE...
                     </div>
                   ) : activeBottom === "testcases" ? (
+                    <>
+                    {lastOutput && (
+                      <div style={{
+                        fontFamily:"Share Tech Mono", fontSize:12,
+                        background:"#040408", border:"1px solid rgba(250,204,21,0.1)",
+                        padding:"10px 14px", marginBottom:10, color:"#22c55e",
+                        whiteSpace:"pre-wrap"
+                      }}>
+                        <span style={{color:"rgba(250,204,21,0.4)", letterSpacing:2, fontSize:9}}>STDOUT ▸ </span>
+                        {lastOutput}
+                      </div>
+                    )}
                     <div className="tc-grid">
                       {testCases.map((tc) => (
                         <div key={tc.id} className={`tc-item ${tc.status || ""}`}>
@@ -910,6 +924,7 @@ def twoSum(nums, target):
                         </div>
                       ))}
                     </div>
+                    </>
                   ) : (
                     <div className="result-panel">
                       {submitStatus === "accepted" ? (
