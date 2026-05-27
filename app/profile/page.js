@@ -72,6 +72,8 @@ if (submissions) setRecent(submissions.map(s => ({
   getUser();
 }, []);
   const [activeTab, setActiveTab] = useState("overview");
+  const [uploading, setUploading] = useState(false);
+  const [avatar, setAvatar] = useState(null);
   const [loaded, setLoaded] = useState(false);
   // 2. Control heatmap values inside a state hook
   const [heatmapData, setHeatmapData] = useState(INITIAL_HEATMAP);
@@ -123,6 +125,19 @@ if (submissions) setRecent(submissions.map(s => ({
     window.addEventListener("resize", resize);
     return () => { cancelAnimationFrame(animId); window.removeEventListener("resize", resize); };
   }, []);
+
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploading(true);
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    const filePath = `avatars/${authUser.id}`;
+    await supabase.storage.from('avatars').upload(filePath, file, { upsert: true });
+    const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(filePath);
+    await supabase.from('users').update({ avatar_url: publicUrl }).eq('email', authUser.email);
+    setAvatar(publicUrl);
+    setUploading(false);
+  };
 
   const diffColor = (d) => d === "EASY" ? "#22c55e" : d === "MEDIUM" ? "#f59e0b" : "#ef4444";
 
@@ -401,8 +416,14 @@ if (submissions) setRecent(submissions.map(s => ({
           <div className="profile-hero">
             <div className="profile-avatar-wrap">
               <div className="avatar-glow" />
-              <div className="profile-avatar">{user?.username?.slice(0,2).toUpperCase() || 'KG'}</div>
-              <div className="online-dot" />
+             <div className="profile-avatar" style={{overflow:'hidden', cursor:'pointer', position:'relative'}}
+                  onClick={() => document.getElementById('avatar-input').click()}>
+                  {avatar || user?.avatar_url
+                    ? <img src={avatar || user?.avatar_url} style={{width:'100%',height:'100%',objectFit:'cover'}} />
+                    : user?.username?.slice(0,2).toUpperCase() || 'KG'}
+                  {uploading && <div style={{position:'absolute',inset:0,background:'rgba(0,0,0,0.5)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,color:'#facc15'}}>...</div>}
+                </div>
+                <input id="avatar-input" type="file" accept="image/*" style={{display:'none'}} onChange={handleAvatarUpload} />
             </div>
 
             <div className="profile-info">
@@ -410,17 +431,16 @@ if (submissions) setRecent(submissions.map(s => ({
              <div className="profile-name">{user?.username || 'Player'}</div>
               <div className="profile-title">{user?.rank || 'BRONZE'} TIER CODER · SEASON 4</div>
               <div className="profile-chips">
-                <div className="profile-chip gold">🥇 GOLD II</div>
-                <div className="profile-chip">🔥 21 DAY STREAK</div>
+                <div className="profile-chip gold">🥇 {user?.rank || 'BRONZE'}</div>
+                <div className="profile-chip">🔥 {user?.streak || 0} DAY STREAK</div>
                 <div className="profile-chip">🌍 INDIA</div>
-                <div className="profile-chip"># 247 GLOBAL</div>
-                <div className="profile-chip">⚡ JOINED JAN 2024</div>
+                <div className="profile-chip">⚡ LVL {user?.level || 1}</div>
               </div>
             </div>
 
             <div className="profile-right">
               <button className="edit-btn" onClick={() => window.location.href = "/settings"}>✎ EDIT PROFILE</button>
-              <button className="share-btn">⬡ SHARE</button>
+              <button className="share-btn" onClick={() => { navigator.clipboard.writeText(window.location.href); alert('Profile link copied!'); }}>⬡ SHARE</button>
             </div>
           </div>
 
@@ -453,7 +473,7 @@ if (submissions) setRecent(submissions.map(s => ({
             <div className="content-left">
 
               {/* HEATMAP */}
-              {(activeTab === "overview" || activeTab === "submissions") && (
+              {activeTab === "overview" && (
                 <div className="card">
                   <div className="card-header">
                     <div className="card-title"><div className="card-dot" />Activity Heatmap</div>
