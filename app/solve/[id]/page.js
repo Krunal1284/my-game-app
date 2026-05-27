@@ -91,7 +91,8 @@ def twoSum(nums, target):
   const [timerActive, setTimerActive] = useState(true);
   const [lastOutput, setLastOutput] = useState(null);
   const [showXPBurst, setShowXPBurst] = useState(false);
-  const [splitPos, setSplitPos] = useState(42); // percent for left panel
+const [splitPos, setSplitPos] = useState(42);
+ const [mobileTab, setMobileTab] = useState("code"); // "desc" or "code"
   const canvasRef = useRef(null);
   const textareaRef = useRef(null);
   const dragRef = useRef(false);
@@ -460,20 +461,26 @@ except Exception as ex:
           transition: background 0.2s; position: relative; z-index: 10;
         }
         @media (max-width: 768px) {
-          .app { height: auto; min-height: 100vh; overflow-y: auto; }
-          .body { flex-direction: column; overflow: visible; height: auto; }
-          .left-panel { width: 100% !important; height: auto; max-height: 50vh; border-right: none; border-bottom: 1px solid rgba(250,204,21,0.08); overflow-y: auto; }
-          .resizer { display: none; }
-          .right-panel { flex: none; height: 60vh; }
-          .topbar { flex-wrap: wrap; height: auto; padding: 8px 12px; gap: 6px; position: relative; }
+          .app { height: 100vh; overflow: hidden; }
+          .topbar { flex-wrap: wrap; height: auto; padding: 6px 12px; gap: 4px; }
           .topbar-left { width: 100%; }
           .topbar-center { width: 100%; justify-content: center; }
-          .topbar-right { width: 100%; justify-content: space-between; }
+          .topbar-right { width: 100%; justify-content: space-between; align-items: center; }
           .problem-name { font-size: 11px; }
-          .desc-scroll { padding: 16px 12px; }
-          .bottom-panel { height: 200px !important; flex-shrink: 0; }
-          .code-wrap { height: 200px; }
-        }
+          .timer { font-size: 11px; padding: 3px 8px; }
+          .xp-pill { font-size: 10px; }
+          .run-btn { padding: 5px 12px; font-size: 9px; }
+          .submit-btn { padding: 5px 14px; font-size: 9px; }
+          .body { flex-direction: column; overflow: hidden; flex: 1; }
+          .left-panel { width: 100% !important; flex: 1; border-right: none; overflow-y: auto; }
+          .resizer { display: none; }
+          .right-panel { width: 100%; flex: 1; overflow: hidden; }
+          .bottom-panel { height: 160px !important; }
+          .desc-scroll { padding: 12px; }
+        .mobile-tab-bar { display: flex !important; border-bottom: 1px solid rgba(250,204,21,0.1); flex-shrink: 0; }
+          .mobile-hide { display: none !important; }
+          .mobile-show { display: flex !important; }
+          }
 
         /* RIGHT PANEL */
         .right-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
@@ -746,11 +753,27 @@ except Exception as ex:
           </div>
         </header>
 
+        {/* MOBILE TAB SWITCHER */}
+        <div className="mobile-tab-bar">
+          {["desc","code"].map(t => (
+            <button key={t} onClick={() => setMobileTab(t)} style={{
+              flex:1, padding:'10px', border:'none',
+              background: mobileTab === t ? 'rgba(250,204,21,0.1)' : 'transparent',
+              color: mobileTab === t ? '#facc15' : 'rgba(255,255,255,0.3)',
+              fontFamily:"'Share Tech Mono',monospace", fontSize:11, letterSpacing:2,
+              borderBottom: mobileTab === t ? '2px solid #facc15' : '2px solid transparent',
+              cursor:'pointer'
+            }}>
+              {t === 'desc' ? 'DESCRIPTION' : 'CODE'}
+            </button>
+          ))}
+        </div>
+
+
         {/* ── BODY ── */}
         <div className="body">
 
-          {/* LEFT PANEL */}
-          <div className="left-panel" style={{ width: `${splitPos}%` }}>
+         <div style={{ width: `${splitPos}%` }} className={`left-panel mobile-${mobileTab === 'desc' ? 'show' : 'hide'}`}>
             <div className="panel-tabs">
               {["description", "hints", "similar"].map((t) => (
                 <button key={t} className={`ptab ${activeLeft === t ? "active" : ""}`} onClick={() => setActiveLeft(t)}>
@@ -812,7 +835,7 @@ except Exception as ex:
                         {h}
                       </div>
                     ))}
-                    {hintsShown < problem?.hints?.length || 0 && (
+                    {hintsShown < (problem?.hints?.length || 0) && (
                       <button className="hint-reveal-btn" onClick={() => setHintsShown((p) => p + 1)}>
                         ◦ REVEAL HINT {hintsShown + 1} <span style={{ marginLeft: "auto", opacity: 0.4 }}>(-5 XP)</span>
                       </button>
@@ -822,7 +845,7 @@ except Exception as ex:
                         // Stuck? Reveal hints one by one. Each costs 5 XP.
                       </div>
                     )}
-                    {hintsShown === problem?.hints?.length || 0 && (
+                    {hintsShown === (problem?.hints?.length || 0) && (
                       <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "rgba(34,197,94,0.4)", letterSpacing: 2, marginTop: 8 }}>
                         ✓ ALL HINTS REVEALED
                       </div>
@@ -866,7 +889,7 @@ except Exception as ex:
           />
 
           {/* RIGHT PANEL: EDITOR + BOTTOM */}
-          <div className="right-panel">
+          <div className={`right-panel mobile-${mobileTab === 'code' ? 'show' : 'hide'}`}>
             <div className="editor-area">
               <div className="editor-toolbar">
                 <div className="editor-toolbar-left">
