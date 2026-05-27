@@ -25,9 +25,9 @@ const RECENT = [
 const INITIAL_HEATMAP = Array.from({ length: 52 * 7 }, () => ({ val: 0 }));
 
 const STATS_BREAKDOWN = [
-  { label: "EASY",   solved: 82,  total: 100, color: "#22c55e" },
-  { label: "MEDIUM", solved: 48,  total: 100, color: "#f59e0b" },
-  { label: "HARD",   solved: 12,  total: 46,  color: "#ef4444" },
+  { label: "EASY",   solved: 0,  total: 100, color: "#22c55e" },
+  { label: "MEDIUM", solved: 0,  total: 100, color: "#f59e0b" },
+  { label: "HARD",   solved: 0,  total: 46,  color: "#ef4444" },
 ];
 
 const LANG_STATS = [
@@ -68,10 +68,27 @@ if (submissions) setRecent(submissions.map(s => ({
       .eq('email', authUser.email)
       .single();
     setUser(data);
+    if (data?.avatar_url) setAvatar(data.avatar_url);
+
+    const { data: allSubs } = await supabase
+      .from('submissions')
+      .select('*')
+      .eq('user_id', authUser.id);
+    if (allSubs) {
+      const easy = allSubs.filter(s => s.status === 'ACCEPTED' && s.difficulty === 'EASY').length;
+      const medium = allSubs.filter(s => s.status === 'ACCEPTED' && s.difficulty === 'MEDIUM').length;
+      const hard = allSubs.filter(s => s.status === 'ACCEPTED' && s.difficulty === 'HARD').length;
+      setBreakdown([
+        { label: "EASY",   solved: easy,   total: 100, color: "#22c55e" },
+        { label: "MEDIUM", solved: medium, total: 100, color: "#f59e0b" },
+        { label: "HARD",   solved: hard,   total: 46,  color: "#ef4444" },
+      ]);
+    }
   };
   getUser();
 }, []);
   const [activeTab, setActiveTab] = useState("overview");
+  const [breakdown, setBreakdown] = useState(STATS_BREAKDOWN);
   const [uploading, setUploading] = useState(false);
   const [avatar, setAvatar] = useState(null);
   const [loaded, setLoaded] = useState(false);
@@ -560,7 +577,7 @@ if (submissions) setRecent(submissions.map(s => ({
                   <div className="card-title"><div className="card-dot" />Problem Breakdown</div>
                 </div>
                 <div className="breakdown-wrap">
-                  {STATS_BREAKDOWN.map((s) => (
+                  {breakdown.map((s) => (
                     <div key={s.label} className="breakdown-row">
                       <div className="breakdown-header">
                         <span className="breakdown-label" style={{ color: s.color }}>{s.label}</span>
