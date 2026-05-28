@@ -28,7 +28,8 @@ export default function ArenaPage() {
   const hasTypedRef = useRef(false);
   const matchChannelRef = useRef(null);
   const queueChannelRef = useRef(null);
-  const battleModeRef = useRef(null); // ← add this
+  const battleModeRef = useRef(null);
+  const matchFoundRef = useRef(false); // ← add this
 
   // ─── GAME OVER & EVALUATION LOGIC ────────────────────────────────────────
   const handleMatchEndEvaluation = async (forcedWinnerId = null, reason = "") => {
@@ -168,7 +169,8 @@ export default function ArenaPage() {
       .limit(1)
       .maybeSingle();
 
-    if (data && !currentMatch) {
+    if (data && !matchFoundRef.current) {
+      matchFoundRef.current = true;
       const targetTable = data.battle_mode === "bugfix" ? "bug_fix_problems" : "problems";
       const { data: prob } = await supabase.from(targetTable).select("*").eq("id", data.problem_id).single();
       setProblem(prob);
@@ -226,6 +228,7 @@ const handleFindMatch = async (mode) => {
   setPlayerProgress(0);
   setRivalProgress(0);
   hasTypedRef.current = false;
+  matchFoundRef.current = false;
 
     const username = arenaStats?.username || currentUser.email.split("@")[0];
     const elo = arenaStats?.elo_rating || 1200;
